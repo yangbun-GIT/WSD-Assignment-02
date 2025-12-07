@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar">
+  <nav class="navbar" :class="{ 'black-nav': isScrolled }">
     <div class="logo">
       <router-link to="/">NETFLIX</router-link>
     </div>
@@ -19,19 +19,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const email = ref('')
+const isScrolled = ref(false) // 스크롤 상태 감지 변수
 const router = useRouter()
 
+// 스크롤 이벤트 핸들러
+const handleScroll = () => {
+  // 스크롤이 50px 이상 내려가면 배경색 변경
+  isScrolled.value = window.scrollY > 50
+}
+
 onMounted(() => {
-  // 로그인 때 저장한 ID 가져오기 (없으면 Guest)
   email.value = localStorage.getItem('UserId') || 'Guest'
+  window.addEventListener('scroll', handleScroll) // 리스너 등록
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll) // 리스너 제거 (메모리 관리)
 })
 
 const logout = () => {
-  // 로컬 스토리지 키 삭제 후 로그인 페이지로 이동
   localStorage.removeItem('TMDb-Key')
   router.push('/signin')
 }
@@ -43,72 +53,41 @@ const logout = () => {
   justify-content: space-between;
   align-items: center;
   padding: 20px 40px;
-  /* 상단 고정 및 배경 그라데이션 */
   position: sticky;
   top: 0;
   z-index: 100;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.9) 10%, rgba(0,0,0,0.5));
-  backdrop-filter: blur(2px); /* 살짝 블러 효과 */
+  /* [핵심 애니메이션] 배경색 변경을 0.5초 동안 부드럽게 수행 */
+  transition: background-color 0.5s ease;
+  background: transparent; /* 기본은 투명 */
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7) 10%, rgba(0,0,0,0)); /* 상단 그림자 */
+}
+
+/* 스크롤 시 적용될 클래스 */
+.navbar.black-nav {
+  background-color: #141414; /* 넷플릭스 검정색 */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
 .logo a {
-  color: #e50914; /* 넷플릭스 레드 */
+  color: #e50914;
   font-size: 1.8rem;
   font-weight: bold;
   text-decoration: none;
 }
 
-.links {
-  display: flex;
-  gap: 20px;
-}
+.links { display: flex; gap: 20px; }
+.links a { color: #e5e5e5; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+.links a:hover, .links a.router-link-active { color: #fff; font-weight: bold; }
 
-.links a {
-  color: #e5e5e5;
-  text-decoration: none;
-  font-size: 0.95rem;
-  transition: color 0.3s;
-}
-
-/* 마우스 올리거나 현재 활성화된 페이지일 때 하얀색으로 강조 */
-.links a:hover, .links a.router-link-active {
-  color: #fff;
-  font-weight: bold;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  color: white;
-  font-size: 0.9rem;
-}
-
+.user-info { display: flex; align-items: center; gap: 15px; color: white; font-size: 0.9rem; }
 .user-info button {
-  background: #e50914;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background 0.2s;
+  background: #e50914; color: white; border: none; padding: 6px 12px;
+  border-radius: 4px; cursor: pointer; font-weight: bold; transition: transform 0.2s;
 }
+.user-info button:hover { transform: scale(1.05); }
 
-.user-info button:hover {
-  background: #f40612;
-}
-
-/* 모바일 화면 대응 (선택 사항) */
 @media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    padding: 15px;
-    gap: 15px;
-  }
-  .links {
-    gap: 15px;
-    font-size: 0.8rem;
-  }
+  .navbar { flex-direction: column; gap: 10px; padding: 10px; background-color: #141414; }
+  .links { gap: 15px; font-size: 0.8rem; }
 }
 </style>
