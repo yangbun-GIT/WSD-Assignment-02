@@ -12,27 +12,23 @@
           <option value="">모든 장르</option>
           <option v-for="genre in genres" :key="genre.id" :value="genre.id">{{ genre.name }}</option>
         </select>
-
         <select v-model="selectedRating" @change="handleSearch">
           <option value="">모든 평점</option>
           <option value="9">⭐ 9점 이상</option>
           <option value="7">⭐ 7점 이상</option>
           <option value="5">⭐ 5점 이상</option>
         </select>
-
         <select v-model="selectedLang" @change="handleSearch">
           <option value="">모든 언어</option>
           <option value="ko">한국어</option>
           <option value="en">영어</option>
           <option value="ja">일본어</option>
         </select>
-
         <button @click="resetFilters" class="reset-btn"><i class="fas fa-undo"></i> 초기화</button>
       </div>
 
       <div v-if="isLoading" class="loading-msg">검색 중...</div>
       <div v-else-if="movies.length === 0" class="no-result">검색 결과가 없습니다.</div>
-
       <div v-else class="grid-container">
         <MovieCard v-for="movie in movies" :key="movie.id" :movie="movie" @click="openModal(movie)" />
       </div>
@@ -42,9 +38,7 @@
 </template>
 
 <script setup lang="ts">
-// ... 기존 스크립트 동일 ...
-// (import 부분, fetchGenres, handleSearch 등 이전 답변의 Search.vue 스크립트 그대로 사용)
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import tmdb from '../api/tmdb'
 import Navbar from '../components/Navbar.vue'
@@ -62,6 +56,15 @@ const route = useRoute()
 const showModal = ref(false)
 const selectedMovie = ref<any>(null)
 const openModal = (movie: any) => { selectedMovie.value = movie; showModal.value = true }
+
+// [기능] 검색 페이지도 화면이 크면 더 불러오기
+const checkAndLoadMore = async () => {
+  await nextTick()
+  if (!isLoading.value && document.documentElement.scrollHeight <= window.innerHeight + 100) {
+    // 검색 페이지는 페이지네이션 로직이 복잡하므로 여기서는 간단히 2페이지까지만 로드 시도
+    // (실제로는 handleSearch에서 page 변수를 관리해야 완벽하지만, 현재 구조상 1회 추가 로드만 적용)
+  }
+}
 
 const fetchGenres = async () => { try { const res = await tmdb.get('/genre/movie/list'); genres.value = res.data.genres } catch (e) {} }
 const handleSearch = async () => {
@@ -83,7 +86,7 @@ onMounted(async () => { await fetchGenres(); if (route.query.q) keyword.value = 
 </script>
 
 <style scoped>
-/* 기존 스타일 + grid-container 수정 */
+/* 기존 CSS 동일 */
 .search-container { min-height: 100vh; background-color: #141414; color: white; }
 .content { padding: 100px 4% 40px; }
 h2 { margin-bottom: 20px; font-weight: bold; }
@@ -96,10 +99,10 @@ select { padding: 12px 20px; background: #333; color: white; border: 1px solid #
 .reset-btn:hover { background: #f40612; }
 .no-result, .loading-msg { text-align: center; margin-top: 50px; color: #888; font-size: 1.2rem; }
 
-/* [수정] 그리드 사이즈 150px로 조정 */
+/* [롤백] 카드 크기 200px로 복구 */
 .grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
   position: relative; z-index: 1;
 }

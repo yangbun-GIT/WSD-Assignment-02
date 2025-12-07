@@ -39,12 +39,18 @@ const viewMode = ref<'table' | 'infinite'>('table')
 const isLoading = ref(false)
 const observerElement = ref<HTMLElement | null>(null)
 
+// [기능] 화면 높이를 체크하여 빈 공간이 있으면 데이터를 더 불러옴 (페이지/무한 모드 공통 적용)
 const checkAndLoadMore = async () => {
   await nextTick()
-  if (viewMode.value === 'infinite' && !isLoading.value) {
-    if (document.documentElement.scrollHeight <= window.innerHeight + 100) {
-      currentPage.value++
-      await fetchMovies(currentPage.value, true)
+  // 로딩 중이 아니고, 스크롤바가 생기지 않았으면 (콘텐츠가 화면보다 짧으면)
+  if (!isLoading.value && document.documentElement.scrollHeight <= window.innerHeight + 100) {
+    console.log('화면이 큽니다. 데이터를 추가 로드합니다.')
+
+    // 페이지 모드일 때도 동작하도록 수정 (1페이지 -> 2페이지 데이터 병합)
+    // 단, 페이지 모드에서는 최대 2페이지까지만 자동 병합 (너무 많이 부르면 페이징 의미 퇴색)
+    if (viewMode.value === 'infinite' || (viewMode.value === 'table' && movies.value.length < 40)) {
+      currentPage.value++ // 다음 페이지 번호 증가
+      await fetchMovies(currentPage.value, true) // 이어붙이기 모드로 호출
     }
   }
 }
@@ -52,8 +58,10 @@ const checkAndLoadMore = async () => {
 const fetchMovies = async (page: number, isAppend: boolean) => {
   if (isLoading.value) return
   isLoading.value = true
+
   try {
     const res = await tmdb.get('/movie/popular', { params: { page: page } })
+
     if (isAppend) {
       const newMovies = res.data.results.filter((newM: any) => !movies.value.some((oldM: any) => oldM.id === newM.id))
       movies.value = [...movies.value, ...newMovies]
@@ -62,15 +70,21 @@ const fetchMovies = async (page: number, isAppend: boolean) => {
     }
   } catch (error) { console.error(error) } finally {
     isLoading.value = false
-    if (isAppend) checkAndLoadMore()
+    // 데이터 로드 후 화면이 꽉 찼는지 체크
+    checkAndLoadMore()
   }
 }
 
 const changeMode = (mode: 'table' | 'infinite') => {
   viewMode.value = mode; currentPage.value = 1; window.scrollTo(0, 0)
-  fetchMovies(1, false).then(() => { if (mode === 'infinite') checkAndLoadMore() })
+  fetchMovies(1, false)
 }
-const changePage = (page: number) => { if (page < 1) return; currentPage.value = page; window.scrollTo(0, 0); fetchMovies(page, false) }
+
+const changePage = (page: number) => {
+  if (page < 1) return;
+  currentPage.value = page; window.scrollTo(0, 0);
+  fetchMovies(page, false) // 페이지 변경 시엔 덮어쓰기
+}
 
 let observer: IntersectionObserver | null = null
 const initObserver = () => {
@@ -79,7 +93,11 @@ const initObserver = () => {
   if (observerElement.value) observer.observe(observerElement.value)
 }
 
-watch(() => [viewMode.value, observerElement.value], () => { if (viewMode.value === 'infinite' && observerElement.value) { initObserver(); checkAndLoadMore() } else { if (observer) observer.disconnect() } })
+watch(() => [viewMode.value, observerElement.value], () => {
+  if (viewMode.value === 'infinite' && observerElement.value) { initObserver(); checkAndLoadMore() }
+  else { if (observer) observer.disconnect() }
+})
+
 onMounted(() => fetchMovies(1, false))
 onUnmounted(() => { if (observer) observer.disconnect() })
 </script>
@@ -94,8 +112,8 @@ onUnmounted(() => { if (observer) observer.disconnect() })
 
 .grid-container {
   display: grid;
-  /* [수정] 카드 최소 너비를 150px로 줄여 한 줄에 더 많이 들어가게 함 */
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  /* [롤백] 카드 크기 200px로 복구 */
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
 }
 
