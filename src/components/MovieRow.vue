@@ -7,12 +7,7 @@
         <i class="fas fa-chevron-left"></i>
       </button>
 
-      <div
-          ref="slider"
-          class="slider"
-          @scroll="checkScroll"
-          @wheel.prevent="onWheel"
-      >
+      <div ref="slider" class="slider" @scroll="checkScroll">
         <MovieCard
             v-for="movie in movies"
             :key="movie.id"
@@ -53,28 +48,21 @@ const checkScroll = () => {
   showLeft.value = slider.value.scrollLeft > 0
 }
 
-// [수정됨] 마우스 휠로 가로 스크롤 구현 (Shift 키 없이도 동작)
-const onWheel = (e: WheelEvent) => {
-  if (!slider.value) return
-  // 세로 스크롤(deltaY) 값을 가로 스크롤(scrollLeft)에 더해줌
-  slider.value.scrollLeft += e.deltaY + e.deltaX
-}
-
 onMounted(() => checkScroll())
 </script>
 
 <style scoped>
-/* [수정됨] 위아래 간격 확보 (40px -> 60px) */
-.movie-row { margin-bottom: 60px; padding: 0 4%; position: relative; }
+/* [디자인] 간격 더 넓힘 (60px -> 80px) */
+.movie-row { margin-bottom: 80px; padding: 0 4%; position: relative; }
 .row-title { color: #e5e5e5; font-size: 1.4rem; font-weight: bold; margin-bottom: 15px; }
 
 .slider-wrapper { position: relative; }
 
 .slider {
   display: flex; gap: 10px; overflow-x: auto; padding: 10px 0;
-  scroll-behavior: smooth; scrollbar-width: none; /* 파이어폭스 스크롤바 숨김 */
+  scroll-behavior: smooth; scrollbar-width: none;
 }
-.slider::-webkit-scrollbar { display: none; /* 크롬 스크롤바 숨김 */ }
+.slider::-webkit-scrollbar { display: none; }
 
 .row-item { flex: 0 0 auto; width: 200px; transition: transform 0.3s; }
 .row-item:hover { z-index: 10; }

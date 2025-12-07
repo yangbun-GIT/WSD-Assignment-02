@@ -54,7 +54,6 @@ const viewMode = ref<'table' | 'infinite'>('table')
 const isLoading = ref(false)
 const observerElement = ref<HTMLElement | null>(null)
 
-// 영화 데이터 가져오기
 const fetchMovies = async (page: number, isAppend: boolean) => {
   if (isLoading.value) return
   isLoading.value = true
@@ -63,7 +62,6 @@ const fetchMovies = async (page: number, isAppend: boolean) => {
     const res = await tmdb.get('/movie/popular', { params: { page: page } })
 
     if (isAppend) {
-      // 중복 제거 후 추가 (API 특성상 중복 데이터가 올 수 있음)
       const newMovies = res.data.results.filter((newM: any) =>
           !movies.value.some((oldM: any) => oldM.id === newM.id)
       )
@@ -72,12 +70,13 @@ const fetchMovies = async (page: number, isAppend: boolean) => {
       movies.value = res.data.results
     }
 
-    // [버그 수정 핵심] 무한 스크롤 모드일 때, 화면에 빈 공간이 남으면 더 불러오기
+    // [핵심 수정] 무한 스크롤 모드이고, 화면이 꽉 차지 않았으면 더 불러오기
     if (viewMode.value === 'infinite') {
-      await nextTick() // 렌더링 완료 대기
-      const sentinel = observerElement.value
-      // 감지 센서가 화면 안에 보이면 -> 더 불러와야 함
-      if (sentinel && sentinel.getBoundingClientRect().top < window.innerHeight) {
+      await nextTick() // DOM 업데이트 대기
+
+      // 화면 전체 높이(scrollHeight)가 창 높이(innerHeight)보다 작으면 스크롤바가 없는 상태
+      if (document.documentElement.scrollHeight <= window.innerHeight) {
+        console.log('화면이 덜 찼습니다. 추가 로드합니다.')
         currentPage.value++
         fetchMovies(currentPage.value, true) // 재귀 호출
       }
@@ -104,7 +103,6 @@ const changePage = (page: number) => {
   fetchMovies(page, false)
 }
 
-// Intersection Observer 설정
 let observer: IntersectionObserver | null = null
 
 const initObserver = () => {
@@ -136,7 +134,7 @@ onUnmounted(() => { if (observer) observer.disconnect() })
 
 <style scoped>
 .popular-container { min-height: 100vh; background-color: #141414; color: white; }
-.content { padding: 80px 40px; } /* 헤더 높이만큼 패딩 추가 */
+.content { padding: 100px 4% 40px; } /* 상단 여백 확보 */
 .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 
 .mode-toggle button {

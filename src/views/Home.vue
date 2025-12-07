@@ -3,6 +3,9 @@
     <Navbar />
 
     <div v-if="featuredMovie" class="hero" :style="{ backgroundImage: `url(https://image.tmdb.org/t/p/original${featuredMovie.backdrop_path})` }">
+
+      <button class="hero-arrow left" @click="prevBanner"><i class="fas fa-chevron-left"></i></button>
+
       <div class="hero-content">
         <h1 class="hero-title">{{ featuredMovie.title }}</h1>
         <p class="hero-desc">{{ truncate(featuredMovie.overview, 150) }}</p>
@@ -11,12 +14,15 @@
           <button class="btn info"><i class="fas fa-info-circle"></i> 상세 정보</button>
         </div>
       </div>
+
+      <button class="hero-arrow right" @click="nextBanner"><i class="fas fa-chevron-right"></i></button>
+
       <div class="hero-gradient"></div>
     </div>
 
     <div class="rows-container">
-      <MovieRow title="인기 영화" :movies="popularMovies" />
-      <MovieRow title="최신 등록 콘텐츠" :movies="nowPlayingMovies" />
+      <MovieRow title="인기 콘텐츠" :movies="popularMovies" />
+      <MovieRow title="최신 콘텐츠" :movies="nowPlayingMovies" />
       <MovieRow title="평단의 찬사 (높은 평점)" :movies="topRatedMovies" />
       <MovieRow title="액션" :movies="actionMovies" />
       <MovieRow title="코미디" :movies="comedyMovies" />
@@ -27,13 +33,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import tmdb from '../api/tmdb'
 import Navbar from '../components/Navbar.vue'
 import MovieRow from '../components/MovieRow.vue'
 
 const featuredMovie = ref<any>(null)
-// 카테고리별 데이터 변수
+const bannerIndex = ref(0)
+let bannerInterval: any = null
+
+// 카테고리별 데이터
 const popularMovies = ref([])
 const nowPlayingMovies = ref([])
 const topRatedMovies = ref([])
@@ -44,16 +53,40 @@ const scifiMovies = ref([])
 
 const truncate = (str: string, n: number) => str?.length > n ? str.substr(0, n - 1) + "..." : str;
 
+// [기능] 배너 슬라이드 로직
+const updateBanner = () => {
+  if (popularMovies.value.length > 0) {
+    featuredMovie.value = popularMovies.value[bannerIndex.value]
+  }
+}
+
+const nextBanner = () => {
+  bannerIndex.value = (bannerIndex.value + 1) % popularMovies.value.length
+  updateBanner()
+  resetTimer()
+}
+
+const prevBanner = () => {
+  bannerIndex.value = (bannerIndex.value - 1 + popularMovies.value.length) % popularMovies.value.length
+  updateBanner()
+  resetTimer()
+}
+
+const resetTimer = () => {
+  clearInterval(bannerInterval)
+  bannerInterval = setInterval(nextBanner, 60000) // 1분 후 자동 넘김
+}
+
 const fetchAllMovies = async () => {
   try {
     const [pop, now, top, act, com, hor, sci] = await Promise.all([
       tmdb.get('/movie/popular'),
       tmdb.get('/movie/now_playing'),
       tmdb.get('/movie/top_rated'),
-      tmdb.get('/discover/movie', { params: { with_genres: 28 } }), // 액션
-      tmdb.get('/discover/movie', { params: { with_genres: 35 } }), // 코미디
-      tmdb.get('/discover/movie', { params: { with_genres: 27 } }), // 공포
-      tmdb.get('/discover/movie', { params: { with_genres: 878 } }) // SF
+      tmdb.get('/discover/movie', { params: { with_genres: 28 } }),
+      tmdb.get('/discover/movie', { params: { with_genres: 35 } }),
+      tmdb.get('/discover/movie', { params: { with_genres: 27 } }),
+      tmdb.get('/discover/movie', { params: { with_genres: 878 } })
     ])
 
     popularMovies.value = pop.data.results
@@ -64,13 +97,14 @@ const fetchAllMovies = async () => {
     horrorMovies.value = hor.data.results
     scifiMovies.value = sci.data.results
 
-    featuredMovie.value = pop.data.results[Math.floor(Math.random() * 10)] // 랜덤 추천
-  } catch (error) {
-    console.error('API Error:', error)
-  }
+    // 첫 배너 설정
+    updateBanner()
+    resetTimer()
+  } catch (error) { console.error('API Error:', error) }
 }
 
 onMounted(() => fetchAllMovies())
+onUnmounted(() => clearInterval(bannerInterval))
 </script>
 
 <style scoped>
@@ -78,9 +112,9 @@ onMounted(() => fetchAllMovies())
 
 .hero {
   position: relative; height: 85vh; background-size: cover; background-position: center top;
-  display: flex; align-items: center; color: white;
+  display: flex; align-items: center; color: white; transition: background-image 0.5s ease-in-out;
 }
-.hero-content { margin-left: 4%; max-width: 600px; z-index: 10; margin-top: 50px; }
+.hero-content { margin-left: 4%; max-width: 600px; z-index: 10; margin-top: 50px; flex: 1; }
 .hero-title { font-size: 4rem; font-weight: 800; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); margin-bottom: 20px;}
 .hero-desc { font-size: 1.3rem; line-height: 1.5; margin-bottom: 30px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
 .hero-buttons { display: flex; gap: 15px; }
@@ -95,12 +129,17 @@ onMounted(() => fetchAllMovies())
   background: linear-gradient(180deg, transparent, #141414);
 }
 
-/* 겹침 문제 해결: 음수 마진 대신 z-index와 배경색 활용 */
+/* [디자인] 배너 화살표 버튼 */
+.hero-arrow {
+  background: rgba(0,0,0,0.3); border: none; color: white; font-size: 2rem;
+  padding: 20px; cursor: pointer; z-index: 20; height: 100%;
+  transition: background 0.3s; opacity: 0; /* 평소엔 숨김 */
+}
+.hero:hover .hero-arrow { opacity: 1; } /* 배너에 마우스 올리면 보임 */
+.hero-arrow:hover { background: rgba(0,0,0,0.6); }
+
 .rows-container {
-  position: relative;
-  z-index: 20;
-  margin-top: -100px; /* 배너 위로 살짝 올라오게 */
-  background: transparent; /* 투명 유지하여 그라데이션 위에 얹음 */
-  padding-bottom: 50px;
+  position: relative; z-index: 20; margin-top: -100px;
+  background: transparent; padding-bottom: 50px;
 }
 </style>
