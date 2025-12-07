@@ -6,7 +6,6 @@
       <div class="hero-content">
         <h1 class="hero-title">{{ featuredMovie.title }}</h1>
         <p class="hero-desc">{{ truncate(featuredMovie.overview, 150) }}</p>
-
         <div class="hero-buttons">
           <button class="btn play"><i class="fas fa-play"></i> 재생</button>
           <button class="btn info"><i class="fas fa-info-circle"></i> 상세 정보</button>
@@ -16,33 +15,13 @@
     </div>
 
     <div class="rows-container">
-      <div class="category-row">
-        <h3>🔥 지금 뜨는 콘텐츠</h3>
-        <div class="slider">
-          <MovieCard v-for="movie in popularMovies" :key="movie.id" :movie="movie" class="slide-item" />
-        </div>
-      </div>
-
-      <div class="category-row">
-        <h3>🎬 빵빵 터지는 액션</h3>
-        <div class="slider">
-          <MovieCard v-for="movie in actionMovies" :key="movie.id" :movie="movie" class="slide-item" />
-        </div>
-      </div>
-
-      <div class="category-row">
-        <h3>🤣 배꼽 빠지는 코미디</h3>
-        <div class="slider">
-          <MovieCard v-for="movie in comedyMovies" :key="movie.id" :movie="movie" class="slide-item" />
-        </div>
-      </div>
-
-      <div class="category-row">
-        <h3>🦁 흥미진진 다큐멘터리</h3>
-        <div class="slider">
-          <MovieCard v-for="movie in docuMovies" :key="movie.id" :movie="movie" class="slide-item" />
-        </div>
-      </div>
+      <MovieRow title="인기 영화" :movies="popularMovies" />
+      <MovieRow title="최신 등록 콘텐츠" :movies="nowPlayingMovies" />
+      <MovieRow title="평단의 찬사 (높은 평점)" :movies="topRatedMovies" />
+      <MovieRow title="액션" :movies="actionMovies" />
+      <MovieRow title="코미디" :movies="comedyMovies" />
+      <MovieRow title="공포" :movies="horrorMovies" />
+      <MovieRow title="SF / 판타지" :movies="scifiMovies" />
     </div>
   </div>
 </template>
@@ -51,135 +30,77 @@
 import { ref, onMounted } from 'vue'
 import tmdb from '../api/tmdb'
 import Navbar from '../components/Navbar.vue'
-import MovieCard from '../components/MovieCard.vue'
+import MovieRow from '../components/MovieRow.vue'
 
-// 영화 데이터 상태 변수들
 const featuredMovie = ref<any>(null)
+// 카테고리별 데이터 변수
 const popularMovies = ref([])
+const nowPlayingMovies = ref([])
+const topRatedMovies = ref([])
 const actionMovies = ref([])
 const comedyMovies = ref([])
-const docuMovies = ref([])
+const horrorMovies = ref([])
+const scifiMovies = ref([])
 
-// 텍스트 길이 자르기 함수
-const truncate = (str: string, n: number) => {
-  return str?.length > n ? str.substr(0, n - 1) + "..." : str;
-}
+const truncate = (str: string, n: number) => str?.length > n ? str.substr(0, n - 1) + "..." : str;
 
-// 각 장르별 데이터 가져오기
 const fetchAllMovies = async () => {
   try {
-    // 1. 인기 영화 (Hero용 + 목록용)
-    const popRes = await tmdb.get('/movie/popular')
-    popularMovies.value = popRes.data.results
+    const [pop, now, top, act, com, hor, sci] = await Promise.all([
+      tmdb.get('/movie/popular'),
+      tmdb.get('/movie/now_playing'),
+      tmdb.get('/movie/top_rated'),
+      tmdb.get('/discover/movie', { params: { with_genres: 28 } }), // 액션
+      tmdb.get('/discover/movie', { params: { with_genres: 35 } }), // 코미디
+      tmdb.get('/discover/movie', { params: { with_genres: 27 } }), // 공포
+      tmdb.get('/discover/movie', { params: { with_genres: 878 } }) // SF
+    ])
 
-    // Hero Movie는 인기 영화 중 첫 번째 것으로 선정
-    featuredMovie.value = popRes.data.results[0]
+    popularMovies.value = pop.data.results
+    nowPlayingMovies.value = now.data.results
+    topRatedMovies.value = top.data.results
+    actionMovies.value = act.data.results
+    comedyMovies.value = com.data.results
+    horrorMovies.value = hor.data.results
+    scifiMovies.value = sci.data.results
 
-    // 2. 액션 (Genre ID: 28)
-    const actionRes = await tmdb.get('/discover/movie', { params: { with_genres: 28 } })
-    actionMovies.value = actionRes.data.results
-
-    // 3. 코미디 (Genre ID: 35)
-    const comedyRes = await tmdb.get('/discover/movie', { params: { with_genres: 35 } })
-    comedyMovies.value = comedyRes.data.results
-
-    // 4. 다큐멘터리 (Genre ID: 99)
-    const docuRes = await tmdb.get('/discover/movie', { params: { with_genres: 99 } })
-    docuMovies.value = docuRes.data.results
-
+    featuredMovie.value = pop.data.results[Math.floor(Math.random() * 10)] // 랜덤 추천
   } catch (error) {
     console.error('API Error:', error)
   }
 }
 
-onMounted(() => {
-  fetchAllMovies()
-})
+onMounted(() => fetchAllMovies())
 </script>
 
 <style scoped>
-.home { background-color: #141414; min-height: 100vh; overflow-x: hidden; }
+.home { background-color: #141414; min-height: 100vh; }
 
-/* === Hero Section === */
 .hero {
-  position: relative;
-  height: 80vh; /* 화면의 80% 높이 */
-  background-size: cover;
-  background-position: center top;
-  color: white;
-  display: flex;
-  align-items: center;
+  position: relative; height: 85vh; background-size: cover; background-position: center top;
+  display: flex; align-items: center; color: white;
 }
-
-.hero-content {
-  margin-left: 4%;
-  max-width: 500px;
-  z-index: 10;
-}
-
-.hero-title {
-  font-size: 3.5rem;
-  font-weight: 800;
-  margin-bottom: 20px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-}
-
-.hero-desc {
-  font-size: 1.2rem;
-  line-height: 1.5;
-  margin-bottom: 30px;
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-}
-
+.hero-content { margin-left: 4%; max-width: 600px; z-index: 10; margin-top: 50px; }
+.hero-title { font-size: 4rem; font-weight: 800; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); margin-bottom: 20px;}
+.hero-desc { font-size: 1.3rem; line-height: 1.5; margin-bottom: 30px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
 .hero-buttons { display: flex; gap: 15px; }
-
-.btn {
-  border: none; padding: 10px 25px; border-radius: 4px;
-  font-size: 1.1rem; font-weight: bold; cursor: pointer;
-  display: flex; align-items: center; gap: 10px; transition: opacity 0.2s;
-}
-
-.btn.play { background-color: white; color: black; }
-.btn.info { background-color: rgba(109, 109, 110, 0.7); color: white; }
-.btn:hover { opacity: 0.8; }
+.btn { border: none; padding: 12px 30px; border-radius: 4px; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+.btn.play { background: white; color: black; }
+.btn.play:hover { background: rgba(255,255,255,0.75); }
+.btn.info { background: rgba(109, 109, 110, 0.7); color: white; }
+.btn.info:hover { background: rgba(109, 109, 110, 0.4); }
 
 .hero-gradient {
-  position: absolute; bottom: 0; left: 0; width: 100%; height: 200px;
+  position: absolute; bottom: 0; left: 0; width: 100%; height: 15rem;
   background: linear-gradient(180deg, transparent, #141414);
 }
 
-/* === Categorized Rows === */
+/* 겹침 문제 해결: 음수 마진 대신 z-index와 배경색 활용 */
 .rows-container {
-  margin-top: -100px; /* Hero 위로 살짝 겹치게 */
   position: relative;
   z-index: 20;
+  margin-top: -100px; /* 배너 위로 살짝 올라오게 */
+  background: transparent; /* 투명 유지하여 그라데이션 위에 얹음 */
   padding-bottom: 50px;
-}
-
-.category-row { margin-bottom: 40px; padding-left: 4%; }
-.category-row h3 { color: #e5e5e5; font-size: 1.4rem; margin-bottom: 15px; font-weight: bold; }
-
-/* 가로 스크롤 슬라이더 */
-.slider {
-  display: flex;
-  overflow-x: auto;
-  overflow-y: hidden;
-  gap: 15px;
-  padding: 10px 0;
-  scroll-behavior: smooth;
-}
-/* 스크롤바 숨기기 */
-.slider::-webkit-scrollbar { display: none; }
-
-/* 카드 아이템 크기 고정 */
-.slide-item {
-  flex: 0 0 auto; /* 크기 줄어들지 않음 */
-  width: 200px; /* PC 기준 카드 너비 */
-}
-
-@media (max-width: 768px) {
-  .hero-title { font-size: 2rem; }
-  .hero-desc { font-size: 1rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .slide-item { width: 120px; }
 }
 </style>
