@@ -96,13 +96,9 @@ const goToSearch = () => {
   if (searchQuery.value.trim()) router.push({ path: '/search', query: { q: searchQuery.value } })
 }
 
-// [수정] 홈 이동 및 스크롤 최상단 초기화
 const goHome = () => {
-  if (route.path === '/') {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  } else {
-    router.push('/')
-  }
+  if (route.path === '/') window.scrollTo({ top: 0, behavior: 'smooth' })
+  else router.push('/')
 }
 </script>
 
@@ -125,10 +121,11 @@ const goHome = () => {
 .right-section { display: flex; align-items: center; gap: 20px; color: white; }
 .icon { font-size: 1.2rem; cursor: pointer; }
 
+/* [수정] 검색창 트랜지션 제거 (즉시 사라짐) */
 .search-box {
   display: flex; align-items: center; gap: 10px;
-  padding: 5px; transition: 0.3s;
-  border: 1px solid transparent;
+  padding: 5px; border: 1px solid transparent;
+  /* transition 제거 */
 }
 .search-box.active {
   border: 1px solid #fff;

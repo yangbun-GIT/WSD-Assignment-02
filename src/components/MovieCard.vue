@@ -1,5 +1,5 @@
 <template>
-  <div class="movie-card" :class="{ 'liked-border': isLiked }" @click="toggleLike">
+  <div class="movie-card" @click="$emit('click', movie)">
     <img
         v-if="movie.poster_path"
         :src="`https://image.tmdb.org/t/p/w500${movie.poster_path}`"
@@ -12,11 +12,9 @@
       <p class="title">{{ movie.title }}</p>
     </div>
 
-    <transition name="pop">
-      <div v-if="isLiked" class="heart-icon">
-        <i class="fas fa-heart"></i>
-      </div>
-    </transition>
+    <div class="heart-btn" @click.stop="toggleLike">
+      <i :class="isLiked ? 'fas fa-heart' : 'far fa-heart'"></i>
+    </div>
   </div>
 </template>
 
@@ -52,23 +50,10 @@ onMounted(() => checkLike())
 
 <style scoped>
 .movie-card {
-  position: relative;
-  cursor: pointer;
-  border-radius: 6px;
-  overflow: hidden;
-  /* [핵심 애니메이션] 크기 변형을 0.3초 동안 부드럽게 */
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s;
+  position: relative; cursor: pointer; border-radius: 6px; overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-
-/* 호버 시 확대 및 그림자 효과 */
-.movie-card:hover {
-  transform: scale(1.05) translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.7);
-  z-index: 10;
-}
-
-/* 찜한 영화 테두리 */
-.liked-border { border: 2px solid #e50914; }
+.movie-card:hover { transform: scale(1.05) translateY(-5px); z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.7); }
 
 .poster { width: 100%; height: 100%; object-fit: cover; display: block; }
 .no-poster { width: 100%; height: 300px; background: #333; display: flex; align-items: center; justify-content: center; color: #888; }
@@ -76,24 +61,19 @@ onMounted(() => checkLike())
 .overlay {
   position: absolute; bottom: 0; left: 0; right: 0;
   background: linear-gradient(to top, black, transparent);
-  padding: 20px 10px 10px;
-  opacity: 0;
-  transition: opacity 0.3s;
+  padding: 20px 10px 10px; opacity: 0; transition: opacity 0.3s;
 }
 .movie-card:hover .overlay { opacity: 1; }
 .title { font-size: 0.9rem; text-align: center; color: white; margin: 0; }
 
-.heart-icon {
-  position: absolute; top: 10px; right: 10px; color: #e50914; font-size: 1.5rem;
+/* [수정] 하트 버튼 스타일 */
+.heart-btn {
+  position: absolute; top: 10px; right: 10px;
+  color: white; font-size: 1.5rem; cursor: pointer;
   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
+  transition: transform 0.2s, color 0.2s;
+  z-index: 15; /* 오버레이보다 위에 */
 }
-
-/* Vue Transition CSS: 하트 팝업 효과 */
-.pop-enter-active { animation: pop-in 0.3s; }
-.pop-leave-active { animation: pop-in 0.3s reverse; }
-@keyframes pop-in {
-  0% { transform: scale(0); }
-  50% { transform: scale(1.4); }
-  100% { transform: scale(1); }
-}
+.heart-btn:hover { transform: scale(1.2); }
+.heart-btn i.fas { color: #e50914; /* 꽉 찬 하트는 빨간색 */ }
 </style>
