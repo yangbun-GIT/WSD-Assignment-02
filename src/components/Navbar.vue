@@ -1,19 +1,34 @@
 <template>
-  <nav class="navbar" :class="{ 'glass-nav': isScrolled }">
-    <div class="logo">
-      <router-link to="/">NETFLIX</router-link>
+  <nav class="navbar" :class="{ 'black-nav': isScrolled }">
+    <div class="left-section">
+      <div class="logo">
+        <router-link to="/">NETFLIX</router-link>
+      </div>
+
+      <div class="links">
+        <router-link to="/">홈</router-link>
+        <router-link to="/popular">대세 콘텐츠</router-link>
+        <router-link to="/wishlist">내가 찜한 리스트</router-link>
+        <router-link to="/search">찾아보기</router-link>
+      </div>
     </div>
 
-    <div class="links">
-      <router-link to="/">홈</router-link>
-      <router-link to="/popular">대세 콘텐츠</router-link>
-      <router-link to="/wishlist">찜한 리스트</router-link>
-      <router-link to="/search">찾아보기</router-link>
-    </div>
+    <div class="right-section">
+      <i class="fas fa-search icon"></i>
+      <i class="fas fa-bell icon"></i>
 
-    <div class="user-info">
-      <span>{{ email }}님</span>
-      <button @click="logout">로그아웃</button>
+      <div class="profile-menu">
+        <div class="profile-icon">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png" alt="User" />
+        </div>
+        <i class="fas fa-caret-down dropdown-arrow"></i>
+
+        <div class="dropdown">
+          <span>{{ email }}님</span>
+          <hr>
+          <button @click="logout">로그아웃</button>
+        </div>
+      </div>
     </div>
   </nav>
 </template>
@@ -27,7 +42,7 @@ const isScrolled = ref(false)
 const router = useRouter()
 
 const handleScroll = () => {
-  isScrolled.value = window.scrollY > 30
+  isScrolled.value = window.scrollY > 50
 }
 
 onMounted(() => {
@@ -47,57 +62,41 @@ const logout = () => {
 
 <style scoped>
 .navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 40px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  transition: all 0.4s ease; /* 부드러운 전환 */
-  background: transparent;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 4%; position: sticky; top: 0; z-index: 100; height: 70px;
+  transition: background-color 0.5s ease;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7) 10%, rgba(0,0,0,0));
 }
+.navbar.black-nav { background-color: #141414; }
 
-/* [Fancy] 글래스모피즘 효과 적용 */
-.navbar.glass-nav {
-  background-color: rgba(20, 20, 20, 0.75); /* 반투명 검정 */
-  backdrop-filter: blur(12px); /* 뒤에 있는 배경이 흐릿하게 보임 */
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* 아주 얇은 경계선 */
-  padding: 12px 40px; /* 스크롤 시 높이 약간 축소 */
-}
-
-.logo a {
-  color: #e50914;
-  font-size: 1.8rem;
-  font-weight: bold;
-  text-decoration: none;
-  text-shadow: 0 0 10px rgba(229, 9, 20, 0.5); /* 로고 네온 효과 */
-}
-
+.left-section { display: flex; align-items: center; gap: 40px; }
+.logo a { color: #e50914; font-size: 1.8rem; font-weight: bold; text-decoration: none; }
 .links { display: flex; gap: 20px; }
-.links a {
-  color: #e5e5e5;
-  text-decoration: none;
-  font-size: 0.95rem;
-  transition: color 0.3s;
-  font-weight: 500;
-}
-.links a:hover, .links a.router-link-active {
-  color: white;
-  text-shadow: 0 0 8px rgba(255,255,255,0.5); /* 텍스트 발광 효과 */
-}
+.links a { color: #e5e5e5; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+.links a:hover, .links a.router-link-active { color: #fff; font-weight: bold; }
 
-.user-info { display: flex; align-items: center; gap: 15px; color: white; font-size: 0.9rem; }
-.user-info button {
-  background: #e50914; color: white; border: none; padding: 6px 12px;
-  border-radius: 4px; cursor: pointer; font-weight: bold; transition: transform 0.2s;
-}
-.user-info button:hover { transform: scale(1.05); box-shadow: 0 0 10px rgba(229,9,20,0.6); }
+.right-section { display: flex; align-items: center; gap: 20px; color: white; }
+.icon { font-size: 1.2rem; cursor: pointer; }
 
+/* 프로필 아이콘 및 드롭다운 */
+.profile-menu { position: relative; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.profile-icon img { width: 32px; height: 32px; border-radius: 4px; }
+.dropdown-arrow { font-size: 0.8rem; transition: transform 0.2s; }
+.profile-menu:hover .dropdown-arrow { transform: rotate(180deg); }
+
+/* 드롭다운 박스 */
+.dropdown {
+  position: absolute; top: 40px; right: 0; background-color: rgba(0,0,0,0.9);
+  border: 1px solid #333; width: 150px; padding: 10px; display: none; flex-direction: column; gap: 10px;
+}
+.profile-menu:hover .dropdown { display: flex; }
+.dropdown span { font-size: 0.8rem; color: #ccc; }
+.dropdown hr { border: 0.5px solid #333; width: 100%; }
+.dropdown button { background: none; border: none; color: white; cursor: pointer; text-align: left; }
+.dropdown button:hover { text-decoration: underline; }
+
+/* 모바일 대응 */
 @media (max-width: 768px) {
-  .navbar { flex-direction: column; gap: 10px; padding: 10px; background-color: #141414; }
-  .links { gap: 15px; font-size: 0.8rem; }
+  .links { display: none; } /* 모바일에서는 메뉴 숨김 (간소화) */
 }
 </style>
