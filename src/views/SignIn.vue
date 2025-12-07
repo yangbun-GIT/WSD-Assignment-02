@@ -1,26 +1,50 @@
 <template>
   <div class="auth-wrapper">
-    <div class="auth-bg"></div>
+    <div class="bg-grid">
+      <div class="bg-overlay"></div>
+      <div v-for="movie in bgMovies" :key="movie.id" class="bg-item">
+        <img :src="`https://image.tmdb.org/t/p/w500${movie.poster_path}`" :alt="movie.title" />
+      </div>
+    </div>
+
+    <div class="logo-area">
+      <span class="logo">NETFLIX</span>
+    </div>
 
     <div class="auth-box">
-      <h1>NETFLIX</h1>
-
       <transition name="fade" mode="out-in">
-
         <form v-if="isLoginMode" key="login" @submit.prevent="handleLogin">
           <h2>로그인</h2>
+
           <div class="input-group">
-            <input v-model="email" type="email" placeholder="이메일 주소" required />
+            <input v-model="email" type="text" placeholder="이메일 주소 또는 휴대전화 번호" required />
           </div>
           <div class="input-group">
-            <input v-model="password" type="password" placeholder="비밀번호 (TMDB API Key)" required />
+            <input v-model="password" type="password" placeholder="비밀번호" required />
           </div>
+
           <button type="submit" class="submit-btn">로그인</button>
 
-          <div class="toggle-text">
-            Netflix 회원이 아니신가요?
-            <span @click="toggleMode">지금 가입하세요.</span>
+          <div class="separator">또는</div>
+
+          <button type="button" class="code-btn">로그인 코드 사용하기</button>
+
+          <div class="help-links">
+            <a href="#">비밀번호를 잊으셨나요?</a>
           </div>
+
+          <div class="remember-me">
+            <input type="checkbox" id="remember" checked>
+            <label for="remember">로그인 정보 저장</label>
+          </div>
+
+          <div class="signup-area">
+            넷플릭스 회원이 아닌가요? <span @click="toggleMode">지금 가입하세요.</span>
+          </div>
+
+          <p class="disclaimer">
+            이 페이지는 Google reCAPTCHA의 보호를 받아 사용자가 로봇이 아님을 확인합니다. <a href="#">자세히 알아보기.</a>
+          </p>
         </form>
 
         <form v-else key="signup" @submit.prevent="handleSignup">
@@ -29,43 +53,52 @@
             <input v-model="email" type="email" placeholder="이메일 주소" required />
           </div>
           <div class="input-group">
-            <input v-model="password" type="password" placeholder="비밀번호 (TMDB API Key)" required />
+            <input v-model="password" type="password" placeholder="비밀번호 설정" required />
           </div>
           <div class="input-group">
             <input v-model="confirmPassword" type="password" placeholder="비밀번호 확인" required />
           </div>
-          <div class="checkbox-group">
-            <input type="checkbox" id="agree" required>
-            <label for="agree">약관에 동의합니다.</label>
-          </div>
+
           <button type="submit" class="submit-btn">회원가입</button>
 
-          <div class="toggle-text">
-            이미 회원이신가요?
-            <span @click="toggleMode">로그인하기.</span>
+          <div class="signup-area">
+            이미 회원이신가요? <span @click="toggleMode">로그인하기.</span>
           </div>
         </form>
       </transition>
 
-      <p v-if="errorMsg" class="error">{{ errorMsg }}</p>
+      <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import tmdb from '../api/tmdb'
 
 const router = useRouter()
-const isLoginMode = ref(true) // true: 로그인, false: 회원가입 상태
-
+const isLoginMode = ref(true)
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
 const errorMsg = ref('')
+const bgMovies = ref<any[]>([])
 
-// 모드 전환 함수
+// [기능] 배경에 깔아둘 영화 이미지 가져오기
+const fetchBgMovies = async () => {
+  try {
+    const res = await tmdb.get('/movie/popular')
+    // 화면을 꽉 채우기 위해 데이터를 3번 복제
+    bgMovies.value = [...res.data.results, ...res.data.results, ...res.data.results]
+  } catch (e) {
+    console.error('배경 로드 실패')
+  }
+}
+
+onMounted(() => fetchBgMovies())
+
 const toggleMode = () => {
   isLoginMode.value = !isLoginMode.value
   errorMsg.value = ''
@@ -75,12 +108,13 @@ const toggleMode = () => {
 
 const handleLogin = async () => {
   try {
+    // API Key 검증 (실제로는 이메일/비번 로직이지만 과제 특성상 키 검증 유지)
     await axios.get(`https://api.themoviedb.org/3/configuration?api_key=${password.value}`)
     localStorage.setItem('TMDb-Key', password.value)
     localStorage.setItem('UserId', email.value)
     router.push('/')
   } catch (e) {
-    errorMsg.value = '로그인 실패: API Key를 확인해주세요.'
+    errorMsg.value = '로그인 실패: 올바른 정보를 입력하세요.'
   }
 }
 
@@ -89,53 +123,111 @@ const handleSignup = () => {
     errorMsg.value = '비밀번호가 일치하지 않습니다.'
     return
   }
-  alert('회원가입 성공! (로컬 스토리지에 저장되었습니다)')
-  // 실제로는 여기서 users 배열에 저장하는 로직을 추가할 수 있습니다.
-  toggleMode() // 로그인 창으로 전환
+  alert('회원가입이 완료되었습니다. 로그인해주세요.')
+  toggleMode()
 }
 </script>
 
 <style scoped>
 .auth-wrapper {
-  position: relative; height: 100vh; display: flex; align-items: center; justify-content: center;
-  /* 넷플릭스 스타일 배경 이미지 */
-  background: url('https://assets.nflxext.com/ffe/siteui/vlv3/f841d4c7-10e1-40af-bcae-07a3f8dc141a/f6d7434e-d6de-4185-a6d4-c77a2d08737b/KR-ko-20220502-popsignuptwoweeks-perspective_alpha_website_medium.jpg') no-repeat center center/cover;
-}
-.auth-bg {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.6); /* 배경 어둡게 */
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* [배경] 포스터 그리드 */
+.bg-grid {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  opacity: 0.5; /* 이미지 흐리게 */
+  z-index: 0;
+  transform: scale(1.1); /* 약간 확대해서 여백 없애기 */
+}
+.bg-item img { width: 100%; height: auto; border-radius: 4px; display: block; }
+
+/* [배경] 어두운 오버레이 (그라데이션) */
+.bg-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: radial-gradient(circle, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.9) 100%);
+  background-color: rgba(0,0,0,0.5); /* 전체적으로 어둡게 */
+  z-index: 1;
+}
+
+.logo-area { position: absolute; top: 20px; left: 40px; z-index: 10; }
+.logo { color: #e50914; font-size: 2.5rem; font-weight: 800; }
+
+/* [로그인 박스] */
 .auth-box {
-  position: relative; z-index: 1; background: rgba(0, 0, 0, 0.75);
-  padding: 60px 68px 40px; border-radius: 4px; width: 100%; max-width: 450px; min-height: 500px;
+  position: relative; z-index: 10;
+  background-color: rgba(0, 0, 0, 0.75); /* 반투명 검정 */
+  padding: 60px 68px 40px;
+  border-radius: 4px;
+  width: 100%; max-width: 450px;
+  min-height: 600px;
   color: white;
 }
 
-h1 { color: #e50914; font-size: 2.5rem; text-align: center; margin-bottom: 20px; }
-h2 { font-size: 2rem; margin-bottom: 28px; }
+h2 { font-size: 2rem; font-weight: 700; margin-bottom: 28px; }
 
+.input-group { margin-bottom: 16px; }
 .input-group input {
-  width: 100%; background: #333; border: none; border-radius: 4px;
-  color: white; height: 50px; line-height: 50px; padding: 0 20px; margin-bottom: 16px;
+  width: 100%; height: 50px;
+  background: #333; border: none; border-radius: 4px;
+  color: white; padding: 0 20px; font-size: 1rem;
+  box-sizing: border-box;
 }
+.input-group input:focus { background: #454545; outline: none; border-bottom: 2px solid #e87c03; }
 
 .submit-btn {
-  width: 100%; background: #e50914; color: white; font-weight: bold;
-  border: none; border-radius: 4px; height: 48px; cursor: pointer; margin-top: 24px; font-size: 1rem;
+  width: 100%; height: 48px;
+  background: #e50914; color: white;
+  font-size: 1rem; font-weight: 700;
+  border: none; border-radius: 4px;
+  cursor: pointer; margin-top: 24px;
 }
+.submit-btn:hover { background: #f6121d; }
 
-.toggle-text { margin-top: 16px; color: #737373; font-size: 1rem; }
-.toggle-text span { color: white; cursor: pointer; margin-left: 5px; }
-.toggle-text span:hover { text-decoration: underline; }
+.separator { text-align: center; margin: 15px 0; color: #b3b3b3; font-size: 0.9rem; }
 
-.error { color: #e87c03; margin-top: 10px; font-size: 14px; }
-.checkbox-group { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: #b3b3b3; }
-
-/* [Vue Transition] 슬라이드 페이드 효과 CSS */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+.code-btn {
+  width: 100%; height: 40px;
+  background: rgba(255, 255, 255, 0.1); color: white;
+  border: none; border-radius: 4px;
+  cursor: pointer; font-size: 0.9rem; margin-bottom: 15px;
 }
-.fade-enter-from { opacity: 0; transform: translateX(20px); }
-.fade-leave-to { opacity: 0; transform: translateX(-20px); }
+.code-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+.help-links { text-align: center; margin-bottom: 20px; }
+.help-links a { color: #b3b3b3; text-decoration: none; font-size: 0.9rem; }
+.help-links a:hover { text-decoration: underline; }
+
+.remember-me { display: flex; align-items: center; gap: 5px; color: #b3b3b3; font-size: 0.9rem; margin-bottom: 15px; }
+.remember-me input { width: 16px; height: 16px; accent-color: #737373; }
+
+.signup-area { color: #737373; font-size: 1rem; margin-top: 40px; }
+.signup-area span { color: white; cursor: pointer; margin-left: 5px; }
+.signup-area span:hover { text-decoration: underline; }
+
+.disclaimer { font-size: 0.8rem; color: #8c8c8c; margin-top: 20px; line-height: 1.4; }
+.disclaimer a { color: #0071eb; text-decoration: none; }
+
+.error-msg { color: #e87c03; margin-top: 20px; font-size: 0.9rem; }
+
+/* 애니메이션 */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+@media (max-width: 740px) {
+  .bg-grid { display: none; } /* 모바일은 배경 제거하고 검정색만 */
+  .auth-wrapper { background-color: black; align-items: flex-start; }
+  .auth-box { background-color: black; padding: 20px; max-width: 100%; min-height: 100vh; }
+  .logo-area { top: 10px; left: 20px; }
+}
 </style>
