@@ -4,19 +4,21 @@
 
     <div class="content">
       <div class="header-section">
-        <h2>대세 콘텐츠</h2>
+        <h2>인기 콘텐츠</h2>
         <div class="mode-toggle">
           <button
               :class="{ active: viewMode === 'table' }"
               @click="changeMode('table')"
+              title="페이지 보기"
           >
-            페이지 보기
+            <i class="fas fa-th-large"></i>
           </button>
           <button
               :class="{ active: viewMode === 'infinite' }"
               @click="changeMode('infinite')"
+              title="무한 스크롤"
           >
-            무한 스크롤
+            <i class="fas fa-infinity"></i>
           </button>
         </div>
       </div>
@@ -54,6 +56,18 @@ const viewMode = ref<'table' | 'infinite'>('table')
 const isLoading = ref(false)
 const observerElement = ref<HTMLElement | null>(null)
 
+// [수정] 대화면 대응: 스크롤바 생길 때까지 로드
+const checkAndLoadMore = async () => {
+  await nextTick()
+  if (viewMode.value === 'infinite' && !isLoading.value) {
+    // 문서 전체 높이가 창 높이보다 작거나 비슷하면 (스크롤바 없음)
+    if (document.documentElement.scrollHeight <= window.innerHeight + 100) {
+      currentPage.value++
+      await fetchMovies(currentPage.value, true)
+    }
+  }
+}
+
 const fetchMovies = async (page: number, isAppend: boolean) => {
   if (isLoading.value) return
   isLoading.value = true
@@ -69,23 +83,12 @@ const fetchMovies = async (page: number, isAppend: boolean) => {
     } else {
       movies.value = res.data.results
     }
-
-    // [핵심 수정] 무한 스크롤 모드이고, 화면이 꽉 차지 않았으면 더 불러오기
-    if (viewMode.value === 'infinite') {
-      await nextTick() // DOM 업데이트 대기
-
-      // 화면 전체 높이(scrollHeight)가 창 높이(innerHeight)보다 작으면 스크롤바가 없는 상태
-      if (document.documentElement.scrollHeight <= window.innerHeight) {
-        console.log('화면이 덜 찼습니다. 추가 로드합니다.')
-        currentPage.value++
-        fetchMovies(currentPage.value, true) // 재귀 호출
-      }
-    }
-
   } catch (error) {
     console.error(error)
   } finally {
     isLoading.value = false
+    // 로딩 끝난 후 체크
+    if (isAppend) checkAndLoadMore()
   }
 }
 
@@ -93,7 +96,9 @@ const changeMode = (mode: 'table' | 'infinite') => {
   viewMode.value = mode
   currentPage.value = 1
   window.scrollTo(0, 0)
-  fetchMovies(1, false)
+  fetchMovies(1, false).then(() => {
+    if (mode === 'infinite') checkAndLoadMore()
+  })
 }
 
 const changePage = (page: number) => {
@@ -123,6 +128,7 @@ const initObserver = () => {
 watch(() => [viewMode.value, observerElement.value], () => {
   if (viewMode.value === 'infinite' && observerElement.value) {
     initObserver()
+    checkAndLoadMore() // 모드 변경 시에도 체크
   } else {
     if (observer) observer.disconnect()
   }
@@ -134,14 +140,17 @@ onUnmounted(() => { if (observer) observer.disconnect() })
 
 <style scoped>
 .popular-container { min-height: 100vh; background-color: #141414; color: white; }
-.content { padding: 100px 4% 40px; } /* 상단 여백 확보 */
+.content { padding: 80px 40px; }
 .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 
+/* [수정] 아이콘 버튼 스타일 */
 .mode-toggle button {
-  background: #333; color: #888; border: 1px solid #555; padding: 8px 16px;
+  background: transparent; color: #888; border: 1px solid #555;
+  padding: 8px 12px; font-size: 1.2rem; /* 아이콘 크기 */
   cursor: pointer; margin-left: 10px; border-radius: 4px; transition: 0.3s;
 }
-.mode-toggle button.active { background: #e50914; color: white; border-color: #e50914; font-weight: bold; }
+.mode-toggle button:hover { color: white; border-color: white; }
+.mode-toggle button.active { background: #e50914; color: white; border-color: #e50914; }
 
 .grid-container {
   display: grid;

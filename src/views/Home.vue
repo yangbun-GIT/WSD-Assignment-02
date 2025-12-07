@@ -42,7 +42,6 @@ const featuredMovie = ref<any>(null)
 const bannerIndex = ref(0)
 let bannerInterval: any = null
 
-// 카테고리별 데이터
 const popularMovies = ref([])
 const nowPlayingMovies = ref([])
 const topRatedMovies = ref([])
@@ -53,7 +52,6 @@ const scifiMovies = ref([])
 
 const truncate = (str: string, n: number) => str?.length > n ? str.substr(0, n - 1) + "..." : str;
 
-// [기능] 배너 슬라이드 로직
 const updateBanner = () => {
   if (popularMovies.value.length > 0) {
     featuredMovie.value = popularMovies.value[bannerIndex.value]
@@ -74,7 +72,7 @@ const prevBanner = () => {
 
 const resetTimer = () => {
   clearInterval(bannerInterval)
-  bannerInterval = setInterval(nextBanner, 60000) // 1분 후 자동 넘김
+  bannerInterval = setInterval(nextBanner, 60000)
 }
 
 const fetchAllMovies = async () => {
@@ -97,7 +95,6 @@ const fetchAllMovies = async () => {
     horrorMovies.value = hor.data.results
     scifiMovies.value = sci.data.results
 
-    // 첫 배너 설정
     updateBanner()
     resetTimer()
   } catch (error) { console.error('API Error:', error) }
@@ -129,14 +126,27 @@ onUnmounted(() => clearInterval(bannerInterval))
   background: linear-gradient(180deg, transparent, #141414);
 }
 
-/* [디자인] 배너 화살표 버튼 */
+/* [수정됨] 배너 화살표 디자인 */
 .hero-arrow {
-  background: rgba(0,0,0,0.3); border: none; color: white; font-size: 2rem;
-  padding: 20px; cursor: pointer; z-index: 20; height: 100%;
-  transition: background 0.3s; opacity: 0; /* 평소엔 숨김 */
+  background: none; /* 배경 제거 */
+  border: none;
+  color: white;
+  font-size: 3.5rem; /* 크기 확대 */
+  padding: 20px;
+  cursor: pointer;
+  z-index: 20;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  opacity: 0.2; /* 평소엔 희미하게 */
+  transition: all 0.3s ease;
+  display: flex; align-items: center;
 }
-.hero:hover .hero-arrow { opacity: 1; } /* 배너에 마우스 올리면 보임 */
-.hero-arrow:hover { background: rgba(0,0,0,0.6); }
+.hero-arrow.left { left: 10px; } /* 위치 조정 */
+.hero-arrow.right { right: 10px; }
+
+.hero:hover .hero-arrow { opacity: 0.5; } /* 배너 호버 시 약간 보임 */
+.hero-arrow:hover { opacity: 1 !important; transform: scale(1.1); } /* 아이콘 호버 시 선명하고 커짐 */
 
 .rows-container {
   position: relative; z-index: 20; margin-top: -100px;

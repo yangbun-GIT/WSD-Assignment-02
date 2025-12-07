@@ -6,11 +6,11 @@
       @mouseleave="isHovered = false"
   >
     <div class="left-section">
-      <a href="#" @click.prevent="goHome" class="logo">NETFLIX</a>
+      <a class="logo" @click.prevent="goHome">NETFLIX</a>
 
       <div class="links">
         <router-link to="/">홈</router-link>
-        <router-link to="/popular">대세 콘텐츠</router-link>
+        <router-link to="/popular">인기 콘텐츠</router-link>
         <router-link to="/wishlist">내가 찜한 리스트</router-link>
         <router-link to="/search">찾아보기</router-link>
       </div>
@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const email = ref('')
 const isScrolled = ref(false)
@@ -61,10 +61,10 @@ const searchQuery = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
 const searchContainer = ref<HTMLElement | null>(null)
 const router = useRouter()
+const route = useRoute()
 
 const handleScroll = () => isScrolled.value = window.scrollY > 50
 
-// [기능] 외부 클릭 감지 (검색창 닫기)
 const handleClickOutside = (event: MouseEvent) => {
   if (showSearch.value && searchContainer.value && !searchContainer.value.contains(event.target as Node)) {
     showSearch.value = false
@@ -74,7 +74,7 @@ const handleClickOutside = (event: MouseEvent) => {
 onMounted(() => {
   email.value = localStorage.getItem('UserId') || 'Guest'
   window.addEventListener('scroll', handleScroll)
-  window.addEventListener('click', handleClickOutside) // 전역 클릭 이벤트 등록
+  window.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
@@ -96,9 +96,13 @@ const goToSearch = () => {
   if (searchQuery.value.trim()) router.push({ path: '/search', query: { q: searchQuery.value } })
 }
 
+// [수정] 홈 이동 및 스크롤 최상단 초기화
 const goHome = () => {
-  router.push('/')
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  if (route.path === '/') {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  } else {
+    router.push('/')
+  }
 }
 </script>
 
@@ -121,15 +125,14 @@ const goHome = () => {
 .right-section { display: flex; align-items: center; gap: 20px; color: white; }
 .icon { font-size: 1.2rem; cursor: pointer; }
 
-/* [디자인] 검색창 개선 */
 .search-box {
   display: flex; align-items: center; gap: 10px;
   padding: 5px; transition: 0.3s;
-  border: 1px solid transparent; /* 기본 테두리 투명 */
+  border: 1px solid transparent;
 }
 .search-box.active {
   border: 1px solid #fff;
-  background: rgba(0,0,0,0.8); /* 배경 진하게 */
+  background: rgba(0,0,0,0.8);
   padding: 5px 10px;
 }
 .search-box input { background: transparent; border: none; color: white; width: 200px; outline: none; }
