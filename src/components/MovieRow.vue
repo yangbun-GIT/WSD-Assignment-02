@@ -11,10 +11,7 @@
           ref="slider"
           class="slider"
           @scroll="checkScroll"
-          @mousedown="startDrag"
-          @mouseleave="stopDrag"
-          @mouseup="stopDrag"
-          @mousemove="onDrag"
+          @wheel.prevent="onWheel"
       >
         <MovieCard
             v-for="movie in movies"
@@ -44,7 +41,6 @@ const slider = ref<HTMLElement | null>(null)
 const showControls = ref(false)
 const showLeft = ref(false)
 
-// 스크롤 버튼 로직
 const scroll = (direction: 'left' | 'right') => {
   if (!slider.value) return
   const { clientWidth } = slider.value
@@ -52,57 +48,37 @@ const scroll = (direction: 'left' | 'right') => {
   slider.value.scrollBy({ left: scrollAmount, behavior: 'smooth' })
 }
 
-// 스크롤 위치 감지 (왼쪽 버튼 숨기기/보이기)
 const checkScroll = () => {
   if (!slider.value) return
   showLeft.value = slider.value.scrollLeft > 0
 }
 
-// === 마우스 드래그 로직 (Optional) ===
-let isDown = false
-let startX = 0
-let scrollLeft = 0
-
-const startDrag = (e: MouseEvent) => {
+// [수정됨] 마우스 휠로 가로 스크롤 구현 (Shift 키 없이도 동작)
+const onWheel = (e: WheelEvent) => {
   if (!slider.value) return
-  isDown = true
-  slider.value.classList.add('active')
-  startX = e.pageX - slider.value.offsetLeft
-  scrollLeft = slider.value.scrollLeft
-}
-const stopDrag = () => {
-  isDown = false
-  if (slider.value) slider.value.classList.remove('active')
-}
-const onDrag = (e: MouseEvent) => {
-  if (!isDown || !slider.value) return
-  e.preventDefault()
-  const x = e.pageX - slider.value.offsetLeft
-  const walk = (x - startX) * 2 // 드래그 속도 조절
-  slider.value.scrollLeft = scrollLeft - walk
+  // 세로 스크롤(deltaY) 값을 가로 스크롤(scrollLeft)에 더해줌
+  slider.value.scrollLeft += e.deltaY + e.deltaX
 }
 
 onMounted(() => checkScroll())
 </script>
 
 <style scoped>
-.movie-row { margin-bottom: 40px; padding: 0 4%; position: relative; }
-.row-title { color: #e5e5e5; font-size: 1.4rem; font-weight: bold; margin-bottom: 10px; }
+/* [수정됨] 위아래 간격 확보 (40px -> 60px) */
+.movie-row { margin-bottom: 60px; padding: 0 4%; position: relative; }
+.row-title { color: #e5e5e5; font-size: 1.4rem; font-weight: bold; margin-bottom: 15px; }
 
 .slider-wrapper { position: relative; }
 
 .slider {
   display: flex; gap: 10px; overflow-x: auto; padding: 10px 0;
   scroll-behavior: smooth; scrollbar-width: none; /* 파이어폭스 스크롤바 숨김 */
-  cursor: grab;
 }
 .slider::-webkit-scrollbar { display: none; /* 크롬 스크롤바 숨김 */ }
-.slider.active { cursor: grabbing; }
 
 .row-item { flex: 0 0 auto; width: 200px; transition: transform 0.3s; }
 .row-item:hover { z-index: 10; }
 
-/* 슬라이드 버튼 (핸들) */
 .handle {
   position: absolute; top: 0; bottom: 0; width: 50px;
   background: rgba(0,0,0,0.5); border: none; color: white;
@@ -117,6 +93,6 @@ onMounted(() => checkScroll())
 
 @media (max-width: 768px) {
   .row-item { width: 120px; }
-  .handle { display: none; } /* 모바일에서는 버튼 숨기고 터치 스크롤 사용 */
+  .handle { display: none; }
 }
 </style>

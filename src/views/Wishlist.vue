@@ -7,6 +7,7 @@
 
       <div v-if="movies.length === 0" class="empty">
         <p>아직 찜한 콘텐츠가 없습니다.</p>
+        <p class="sub-text">마음에 드는 영화를 찜해보세요!</p>
       </div>
 
       <div v-else class="grid">
@@ -22,13 +23,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import Navbar from '../components/Navbar.vue' // 헤더 불러오기
+import Navbar from '../components/Navbar.vue'
 import MovieCard from '../components/MovieCard.vue'
 
 const movies = ref([])
 
 onMounted(() => {
-  // API 호출 없이 로컬 스토리지 데이터만 가져옵니다. [cite: 395]
   const savedData = localStorage.getItem('my-wishlist')
   if (savedData) {
     movies.value = JSON.parse(savedData)
@@ -41,20 +41,22 @@ onMounted(() => {
   min-height: 100vh;
   background-color: #141414;
 }
+/* [수정됨] 헤더 높이(70px)보다 넉넉하게 상단 패딩 부여 */
 .content {
-  padding: 20px 40px;
+  padding: 100px 4% 40px;
   color: white;
 }
-h2 { margin-bottom: 20px; }
+h2 { margin-bottom: 20px; font-weight: bold; }
+
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
 }
 .empty {
   text-align: center;
-  margin-top: 100px;
+  margin-top: 150px;
   color: #666;
-  font-size: 1.2rem;
 }
+.sub-text { font-size: 0.9rem; margin-top: 10px; }
 </style>

@@ -1,5 +1,10 @@
 <template>
-  <nav class="navbar" :class="{ 'black-nav': isScrolled }">
+  <nav
+      class="navbar"
+      :class="{ 'black-nav': isScrolled, 'hover-nav': isHovered }"
+      @mouseenter="isHovered = true"
+      @mouseleave="isHovered = false"
+  >
     <div class="left-section">
       <router-link to="/" class="logo">NETFLIX</router-link>
 
@@ -50,6 +55,7 @@ import { useRouter } from 'vue-router'
 
 const email = ref('')
 const isScrolled = ref(false)
+const isHovered = ref(false) // [추가] 호버 상태 변수
 const showSearch = ref(false)
 const searchQuery = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
@@ -71,15 +77,11 @@ const logout = () => {
 
 const toggleSearch = () => {
   showSearch.value = !showSearch.value
-  if (showSearch.value) {
-    nextTick(() => searchInput.value?.focus())
-  }
+  if (showSearch.value) nextTick(() => searchInput.value?.focus())
 }
 
 const goToSearch = () => {
-  if (searchQuery.value.trim()) {
-    router.push({ path: '/search', query: { q: searchQuery.value } })
-  }
+  if (searchQuery.value.trim()) router.push({ path: '/search', query: { q: searchQuery.value } })
 }
 </script>
 
@@ -87,11 +89,17 @@ const goToSearch = () => {
 .navbar {
   display: flex; justify-content: space-between; align-items: center;
   padding: 0 4%; position: fixed; top: 0; width: 100%; z-index: 1000; height: 70px;
-  box-sizing: border-box; /* 패딩 포함 크기 계산 */
-  transition: background-color 0.5s ease;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.7) 10%, rgba(0,0,0,0));
+  box-sizing: border-box;
+  transition: background-color 0.4s ease;
+  /* [수정됨] 기본 상태에서도 약간 어둡게 처리하여 가독성 확보 */
+  background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%);
 }
+
+/* 스크롤 내렸을 때: 완전 검정 */
 .navbar.black-nav { background-color: #141414; }
+
+/* [추가됨] 마우스 올렸을 때: 진한 반투명 검정 */
+.navbar.hover-nav { background-color: rgba(0,0,0,0.8); }
 
 .left-section { display: flex; align-items: center; gap: 40px; }
 .logo { color: #e50914; font-size: 1.8rem; font-weight: bold; text-decoration: none; cursor: pointer; }
@@ -102,29 +110,18 @@ const goToSearch = () => {
 .right-section { display: flex; align-items: center; gap: 20px; color: white; }
 .icon { font-size: 1.2rem; cursor: pointer; }
 
-/* 검색창 애니메이션 */
 .search-box { display: flex; align-items: center; gap: 10px; border: 1px solid transparent; padding: 5px; transition: 0.3s; }
 .search-box.active { border: 1px solid white; background: rgba(0,0,0,0.5); }
 .search-box input { background: transparent; border: none; color: white; width: 200px; outline: none; }
 
-/* 프로필 드롭다운 (Hover 이슈 해결) */
 .profile-menu { position: relative; display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 10px 0; }
 .profile-icon img { width: 32px; height: 32px; border-radius: 4px; }
 .dropdown-arrow { font-size: 0.8rem; transition: transform 0.2s; }
 .profile-menu:hover .dropdown-arrow { transform: rotate(180deg); }
 
-.dropdown {
-  position: absolute; top: 100%; right: 0;
-  /* [핵심] 투명한 패딩을 줘서 마우스가 이동할 때 끊기지 않게 함 */
-  padding-top: 10px;
-  display: none;
-}
+.dropdown { position: absolute; top: 100%; right: 0; padding-top: 10px; display: none; }
 .profile-menu:hover .dropdown { display: block; }
-
-.dropdown-content {
-  background-color: rgba(0,0,0,0.9); border: 1px solid #333; width: 150px; padding: 15px;
-  display: flex; flex-direction: column; gap: 10px;
-}
+.dropdown-content { background-color: rgba(0,0,0,0.9); border: 1px solid #333; width: 150px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
 .dropdown span { font-size: 0.8rem; color: #ccc; }
 .dropdown hr { border: 0.5px solid #333; width: 100%; margin: 0; }
 .drop-link, .dropdown button { color: white; text-decoration: none; font-size: 0.9rem; background: none; border: none; text-align: left; cursor: pointer; padding: 0; }
