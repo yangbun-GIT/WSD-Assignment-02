@@ -39,7 +39,9 @@
       </div>
 
       <div v-if="viewMode === 'infinite'" ref="observerElement" class="observer-sentinel">
-        <p v-if="isLoading">로딩 중...</p>
+        <p v-if="isLoading" class="loading-text">
+          <i class="fas fa-spinner fa-spin"></i> 로딩 중...
+        </p>
       </div>
     </div>
 
@@ -48,11 +50,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onUnmounted } from 'vue'
+import { ref, onMounted, watch, onUnmounted, nextTick } from 'vue'
 import tmdb from '../api/tmdb'
 import Navbar from '../components/Navbar.vue'
 import MovieCard from '../components/MovieCard.vue'
-import MovieModal from '../components/MovieModal.vue' // [추가]
+import MovieModal from '../components/MovieModal.vue'
 
 const movies = ref<any[]>([])
 const currentPage = ref(1)
@@ -68,7 +70,23 @@ const openModal = (movie: any) => {
   showModal.value = true
 }
 
-// 영화 데이터 가져오기 (단순화: 페이지 병합 로직 제거)
+// [핵심 수정] 화면이 꽉 찰 때까지 재귀적으로 데이터 로드
+const checkAndLoadMore = async () => {
+  if (viewMode.value !== 'infinite') return
+
+  await nextTick() // DOM 렌더링 대기
+
+  const scrollHeight = document.documentElement.scrollHeight
+  const clientHeight = window.innerHeight
+
+  // 스크롤바가 아직 안 생겼거나, 하단 여유 공간이 너무 많으면 추가 로드
+  if (!isLoading.value && scrollHeight <= clientHeight + 200) {
+    console.log('화면이 비어있어 추가 로드합니다.')
+    currentPage.value++
+    await fetchMovies(currentPage.value, true)
+  }
+}
+
 const fetchMovies = async (page: number, isAppend: boolean) => {
   if (isLoading.value) return
   isLoading.value = true
@@ -77,19 +95,22 @@ const fetchMovies = async (page: number, isAppend: boolean) => {
     const res = await tmdb.get('/movie/popular', { params: { page: page } })
 
     if (isAppend) {
-      // 무한 스크롤일 때만 데이터 이어붙이기
+      // 중복 제거 후 추가
       const newMovies = res.data.results.filter((newM: any) =>
           !movies.value.some((oldM: any) => oldM.id === newM.id)
       )
       movies.value = [...movies.value, ...newMovies]
     } else {
-      // 페이지 모드일 때는 데이터 덮어쓰기 (20개 고정)
       movies.value = res.data.results
     }
   } catch (error) {
     console.error(error)
   } finally {
     isLoading.value = false
+    // [중요] 로딩이 끝난 후 화면 높이 체크 (재귀 호출 트리거)
+    if (isAppend) {
+      checkAndLoadMore()
+    }
   }
 }
 
@@ -97,7 +118,11 @@ const changeMode = (mode: 'table' | 'infinite') => {
   viewMode.value = mode
   currentPage.value = 1
   window.scrollTo(0, 0)
-  fetchMovies(1, false)
+
+  // 모드 변경 시 초기화 후 로드
+  fetchMovies(1, false).then(() => {
+    if (mode === 'infinite') checkAndLoadMore()
+  })
 }
 
 const changePage = (page: number) => {
@@ -107,29 +132,30 @@ const changePage = (page: number) => {
   fetchMovies(page, false)
 }
 
-// 무한 스크롤 감지
+// Intersection Observer (스크롤 감지)
 let observer: IntersectionObserver | null = null
 
 const initObserver = () => {
   if (observer) observer.disconnect()
+
   observer = new IntersectionObserver((entries) => {
+    // 센서가 화면에 보이고, 로딩 중이 아닐 때
     if (entries[0].isIntersecting && !isLoading.value) {
       currentPage.value++
       fetchMovies(currentPage.value, true)
     }
   })
-  if (observerElement.value) observer.observe(observerElement.value)
+
+  if (observerElement.value) {
+    observer.observe(observerElement.value)
+  }
 }
 
-watch(() => [viewMode.value, observerElement.value], () => {
+// 모드 변경 감지 및 옵저버 재설정
+watch(() => [viewMode.value, observerElement.value], async () => {
   if (viewMode.value === 'infinite' && observerElement.value) {
     initObserver()
-    // 무한 스크롤 모드 초기 진입 시 화면이 비어있으면 2페이지 로드 시도
-    // (페이지 모드 로직과는 분리됨)
-    if (movies.value.length > 0 && document.documentElement.scrollHeight <= window.innerHeight) {
-      currentPage.value++
-      fetchMovies(currentPage.value, true)
-    }
+    await checkAndLoadMore() // 진입 시 즉시 체크
   } else {
     if (observer) observer.disconnect()
   }
@@ -153,8 +179,7 @@ onUnmounted(() => { if (observer) observer.disconnect() })
 
 .grid-container {
   display: grid;
-  /* [수정] 최소 너비를 200px 이상으로 잡아서 대형 화면에서도 카드가 너무 작아지지 않게 함 */
-  /* 이렇게 하면 화면이 넓어도 20개가 적당히 꽉 차 보입니다 */
+  /* [유지] 200px 최소 너비로 대화면에서 꽉 차게 */
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 20px;
 }
@@ -163,7 +188,8 @@ onUnmounted(() => { if (observer) observer.disconnect() })
 .pagination button { background: #333; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
 .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.observer-sentinel { height: 50px; text-align: center; margin-top: 20px; color: #888; }
+.observer-sentinel { height: 80px; text-align: center; margin-top: 20px; color: #888; display: flex; align-items: center; justify-content: center; }
+.loading-text { font-size: 1.2rem; }
 
 @media (max-width: 768px) {
   .grid-container { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
