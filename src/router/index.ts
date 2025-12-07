@@ -2,13 +2,15 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import SignIn from '../views/SignIn.vue'
 import Wishlist from '../views/Wishlist.vue'
-import Popular from '../views/Popular.vue' // [추가]
+import Popular from '../views/Popular.vue'
+import Search from '../views/Search.vue' // [추가됨]
 
 const routes = [
     { path: '/', name: 'Home', component: Home },
     { path: '/signin', name: 'SignIn', component: SignIn },
     { path: '/wishlist', name: 'Wishlist', component: Wishlist },
-    { path: '/popular', name: 'Popular', component: Popular } // [추가]
+    { path: '/popular', name: 'Popular', component: Popular },
+    { path: '/search', name: 'Search', component: Search } // [추가됨]
 ]
 
 const router = createRouter({
