@@ -1,6 +1,6 @@
 <template>
   <div class="movie-card" :class="{ 'liked-border': isLiked }" @click="$emit('click', movie)">
-    <img v-if="movie.poster_path" :src="`https://image.tmdb.org/t/p/w500${movie.poster_path}`" :alt="movie.title" class="poster" />
+    <img v-if="movie.poster_path" :src="posterUrl" :alt="movie.title" class="poster" />
     <div v-else class="no-poster"><span>이미지 준비중</span></div>
     <div class="overlay"><p class="title">{{ movie.title }}</p></div>
     <div class="heart-btn" @click.stop="handleToggleLike">
@@ -19,12 +19,19 @@ defineEmits(['click'])
 const store = useMovieStore()
 const isLiked = computed(() => store.isLiked(props.movie.id))
 
+// [NEW] 저화질 모드 체크 (w500 -> w200)
+const posterUrl = computed(() => {
+  const size = store.lowDataMode ? 'w200' : 'w500'
+  return `https://image.tmdb.org/t/p/${size}${props.movie.poster_path}`
+})
+
 const handleToggleLike = () => {
   store.toggleLike(props.movie)
 }
 </script>
 
 <style scoped>
+/* 기존 스타일 유지 */
 .movie-card { position: relative; cursor: pointer; border-radius: 6px; overflow: hidden; aspect-ratio: 2 / 3; width: 100%; background-color: #222; transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s; }
 .movie-card:hover { transform: scale(1.05); z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.7); }
 .liked-border { border: 2px solid #e50914; }

@@ -88,10 +88,13 @@ const prevBanner = () => {
   updateBanner()
   resetTimer()
 }
+// script setup 내 resetTimer 함수 수정
 const resetTimer = () => {
   clearInterval(bannerInterval)
-  // [수정] 1분(60000ms) 간격으로 자동 슬라이드
-  bannerInterval = setInterval(nextBanner, 60000)
+  // [NEW] 설정에서 자동 재생이 켜져 있을 때만 타이머 동작
+  if (store.autoplay) {
+    bannerInterval = setInterval(nextBanner, 60000)
+  }
 }
 
 onMounted(async () => {

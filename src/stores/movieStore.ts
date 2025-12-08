@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import tmdb from '../api/tmdb'
 
 export const useMovieStore = defineStore('movie', () => {
-    // --- State (총 9개 Key 관리) ---
+    // --- State (총 14개 Key) ---
     const wishlist = ref<any[]>([])
     const email = ref('')
     const apiKey = ref('')
@@ -12,52 +12,44 @@ export const useMovieStore = defineStore('movie', () => {
     const theme = ref('dark')
     const watchHistory = ref<any[]>([])
     const genreCache = ref<any[]>([])
-
-    // [NEW] 보기 모드 (기본값 table)
     const viewMode = ref<'table' | 'infinite'>('table')
+
+    // [NEW] 추가된 5가지 상태
+    const wishlistSort = ref<'date' | 'alpha'>('date')
+    const includeAdult = ref(false)
+    const autoplay = ref(true)
+    const lowDataMode = ref(false)
+    const lastPath = ref('/')
 
     // --- Actions ---
     const initializeStore = () => {
         const load = (key: string) => {
             const data = localStorage.getItem(key)
-            return data ? JSON.parse(data) : null
+            try { return data ? JSON.parse(data) : null } catch { return null }
         }
 
         // 기존 데이터 로드
-        const savedWishlist = load('my-wishlist')
-        if (savedWishlist) wishlist.value = savedWishlist
-
+        if (load('my-wishlist')) wishlist.value = load('my-wishlist')
         email.value = localStorage.getItem('UserId') || ''
         apiKey.value = localStorage.getItem('TMDb-Key') || ''
-
-        const savedHistory = load('search-history')
-        if (savedHistory) searchHistory.value = savedHistory
-
-        const savedLang = localStorage.getItem('app-lang')
-        if (savedLang) language.value = savedLang
-
-        const savedTheme = localStorage.getItem('app-theme')
-        if (savedTheme) theme.value = savedTheme
+        if (load('search-history')) searchHistory.value = load('search-history')
+        language.value = localStorage.getItem('app-lang') || 'ko-KR'
+        theme.value = localStorage.getItem('app-theme') || 'dark'
         applyTheme(theme.value)
+        if (load('watch-history')) watchHistory.value = load('watch-history')
+        if (load('cached-genres')) genreCache.value = load('cached-genres')
+        viewMode.value = localStorage.getItem('view-mode') as any || 'table'
 
-        const savedWatch = load('watch-history')
-        if (savedWatch) watchHistory.value = savedWatch
-
-        const savedGenres = load('cached-genres')
-        if (savedGenres) genreCache.value = savedGenres
-
-        // [NEW] 보기 모드 로드
-        const savedViewMode = localStorage.getItem('view-mode')
-        if (savedViewMode) viewMode.value = savedViewMode as 'table' | 'infinite'
+        // [NEW] 신규 데이터 로드
+        wishlistSort.value = localStorage.getItem('wishlist-sort') as any || 'date'
+        includeAdult.value = localStorage.getItem('include-adult') === 'true'
+        const savedAutoplay = localStorage.getItem('autoplay')
+        autoplay.value = savedAutoplay === null ? true : savedAutoplay === 'true'
+        lowDataMode.value = localStorage.getItem('low-data-mode') === 'true'
+        lastPath.value = localStorage.getItem('last-path') || '/'
     }
 
-    // --- [NEW] 보기 모드 저장 ---
-    const setViewMode = (mode: 'table' | 'infinite') => {
-        viewMode.value = mode
-        localStorage.setItem('view-mode', mode)
-    }
-
-    // ... (기존 로그인, 찜하기, 검색기록, 언어, 테마, 시청기록, 캐싱 함수들 유지) ...
+    // --- 기존 함수들 (로그인, 찜, 검색 등) ---
     const login = (userEmail: string, key: string) => {
         email.value = userEmail; apiKey.value = key;
         localStorage.setItem('UserId', userEmail); localStorage.setItem('TMDb-Key', key);
@@ -109,11 +101,38 @@ export const useMovieStore = defineStore('movie', () => {
             return genreCache.value
         } catch (e) { return [] }
     }
+    const setViewMode = (mode: 'table' | 'infinite') => {
+        viewMode.value = mode; localStorage.setItem('view-mode', mode)
+    }
+
+    // --- [NEW] 신규 기능 함수들 ---
+    const setWishlistSort = (sort: 'date' | 'alpha') => {
+        wishlistSort.value = sort; localStorage.setItem('wishlist-sort', sort)
+    }
+    const toggleAdult = () => {
+        includeAdult.value = !includeAdult.value
+        localStorage.setItem('include-adult', String(includeAdult.value))
+    }
+    const toggleAutoplay = () => {
+        autoplay.value = !autoplay.value
+        localStorage.setItem('autoplay', String(autoplay.value))
+    }
+    const toggleLowData = () => {
+        lowDataMode.value = !lowDataMode.value
+        localStorage.setItem('low-data-mode', String(lowDataMode.value))
+    }
+    const saveLastPath = (path: string) => {
+        if (path === '/signin') return // 로그인 페이지는 저장 안 함
+        lastPath.value = path
+        localStorage.setItem('last-path', path)
+    }
 
     return {
         wishlist, email, apiKey, searchHistory, language, theme, watchHistory, genreCache, viewMode,
+        wishlistSort, includeAdult, autoplay, lowDataMode, lastPath,
         initializeStore, login, logout, toggleLike, isLiked,
         addSearchHistory, removeSearchHistory, setLanguage,
-        toggleTheme, addToHistory, fetchGenres, setViewMode
+        toggleTheme, addToHistory, fetchGenres, setViewMode,
+        setWishlistSort, toggleAdult, toggleAutoplay, toggleLowData, saveLastPath
     }
 })
