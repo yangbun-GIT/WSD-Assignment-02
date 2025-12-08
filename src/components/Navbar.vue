@@ -6,7 +6,9 @@
       @mouseleave="isHovered = false"
   >
     <div class="left-section">
-      <a href="#" class="logo" @click.prevent="goHome">NETFLIX</a>
+      <a href="#" class="logo-link" @click.prevent="goHome">
+        <img src="../assets/yjy.png" alt="YJY NETFLIX" class="logo-img" />
+      </a>
 
       <div class="links">
         <router-link to="/">홈</router-link>
@@ -96,7 +98,6 @@ const goToSearch = () => {
   if (searchQuery.value.trim()) router.push({ path: '/search', query: { q: searchQuery.value } })
 }
 
-// [수정] 홈에서도 동작하도록 로직 강화
 const goHome = () => {
   if (route.path === '/') {
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -109,15 +110,23 @@ const goHome = () => {
 </script>
 
 <style scoped>
-/* 기존 스타일 유지 */
 .navbar { display: flex; justify-content: space-between; align-items: center; padding: 0 4%; position: fixed; top: 0; width: 100%; z-index: 1000; height: 70px; box-sizing: border-box; transition: background-color 0.4s ease; background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); }
 .navbar.black-nav { background-color: #141414; }
 .navbar.hover-nav { background-color: rgba(0,0,0,0.9); }
+
 .left-section { display: flex; align-items: center; gap: 40px; }
-.logo { color: #e50914; font-size: 1.8rem; font-weight: bold; text-decoration: none; cursor: pointer; }
+
+/* [수정] 로고 이미지 스타일 */
+.logo-link { display: flex; align-items: center; cursor: pointer; }
+.logo-img {
+  height: 40px; /* 로고 높이 */
+  object-fit: contain;
+}
+
 .links { display: flex; gap: 20px; }
 .links a { color: #e5e5e5; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
 .links a:hover, .links a.router-link-active { color: #fff; font-weight: bold; }
+
 .right-section { display: flex; align-items: center; gap: 20px; color: white; }
 .icon { font-size: 1.2rem; cursor: pointer; }
 .search-box { display: flex; align-items: center; gap: 10px; padding: 5px; border: 1px solid transparent; }
