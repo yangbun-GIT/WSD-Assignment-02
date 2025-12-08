@@ -16,6 +16,14 @@
         <i class="fas fa-search icon" @click="toggleSearch"></i>
         <input v-if="showSearch" ref="searchInput" v-model="searchQuery" @keyup.enter="goToSearch" placeholder="제목, 사람, 장르" />
       </div>
+
+      <i
+          class="fas icon theme-btn"
+          :class="theme === 'dark' ? 'fa-moon' : 'fa-sun'"
+          @click="store.toggleTheme"
+          title="테마 변경"
+      ></i>
+
       <i class="fas fa-bell icon"></i>
       <div class="profile-menu">
         <div class="profile-icon">
@@ -42,7 +50,7 @@ import { useMovieStore } from '../stores/movieStore'
 import { storeToRefs } from 'pinia'
 
 const store = useMovieStore()
-const { email } = storeToRefs(store)
+const { email, theme } = storeToRefs(store) // theme 추가
 
 const isScrolled = ref(false)
 const isHovered = ref(false)
@@ -80,15 +88,14 @@ const goToSearch = () => { if (searchQuery.value.trim()) router.push({ path: '/s
 .navbar.hover-nav { background-color: rgba(0,0,0,0.9); }
 .left-section { display: flex; align-items: center; gap: 40px; }
 .logo-link { display: flex; align-items: center; cursor: pointer; margin-right: 20px; }
-
-/* [수정] 로고 크기 40px -> 60px로 확대 */
 .logo-img { height: 60px; width: auto; object-fit: contain; display: block; }
-
 .links { display: flex; gap: 20px; }
 .links a { color: #e5e5e5; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
 .links a:hover, .links a.router-link-active { color: #fff; font-weight: bold; }
 .right-section { display: flex; align-items: center; gap: 20px; color: white; }
 .icon { font-size: 1.2rem; cursor: pointer; }
+.theme-btn { margin-right: 10px; font-size: 1.2rem; transition: transform 0.3s; }
+.theme-btn:hover { color: #e50914; transform: rotate(20deg); }
 .search-box { display: flex; align-items: center; gap: 10px; padding: 5px; border: 1px solid transparent; }
 .search-box.active { border: 1px solid #fff; background: rgba(0,0,0,0.8); padding: 5px 10px; }
 .search-box input { background: transparent; border: none; color: white; width: 200px; outline: none; }

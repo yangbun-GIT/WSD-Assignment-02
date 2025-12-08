@@ -1,7 +1,15 @@
+/* 전역 변수 및 기본 설정 */
 :root {
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     font-weight: 400;
+
+    /* [수정] 다크 모드 기본 텍스트 색상 (더 밝게) */
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --bg-primary: #141414;
+    --bg-secondary: #1f1f1f;
+
     color-scheme: dark;
 }
 
@@ -10,29 +18,56 @@ body {
     padding: 0;
     width: 100%;
     min-height: 100vh;
-
-    /* [수정] 더 어두운 넷플릭스 스타일 그라데이션 */
-    /* 중앙은 아주 짙은 회색(#1a1a1a), 외곽은 완전 검정(#000000) */
-    background: radial-gradient(circle at center, #1a1a1a 0%, #000000 100%);
-
-    background-attachment: fixed; /* 스크롤 시 배경 고정 */
-    color: white;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     overflow-x: hidden;
+    transition: background-color 0.3s, color 0.3s;
 }
 
-#app {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    padding: 0;
+/* =========================================
+   [수정] 라이트 모드 스타일 강화 (가독성 개선)
+========================================= */
+body.light-mode {
+    /* 텍스트 변수 재할당 */
+    --text-primary: #111111; /* 거의 검은색으로 진하게 */
+    --text-secondary: #555555; /* 보조 텍스트도 진하게 */
+    --bg-primary: #f8f9fa;   /* 아주 밝은 회색 배경 */
+    --bg-secondary: #ffffff; /* 흰색 배경 */
+
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
 }
 
+/* 라이트 모드 컴포넌트별 색상 강제 적용 */
+body.light-mode .navbar { background: var(--bg-secondary) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+body.light-mode .navbar a,
+body.light-mode .icon,
+body.light-mode .search-btn,
+body.light-mode h2,
+body.light-mode h3,
+body.light-mode p { color: var(--text-primary) !important; }
+
+/* 입력창 및 모달 가독성 확보 */
+body.light-mode input,
+body.light-mode select,
+body.light-mode .search-bar,
+body.light-mode .modal-content {
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border-color: #ddd !important;
+}
+body.light-mode .modal-body,
+body.light-mode .overview { color: #333 !important; }
+
+
+/* 공통 스타일 유지 */
+#app { width: 100%; max-width: 100%; margin: 0; padding: 0; }
 a { text-decoration: none; color: inherit; transition: 0.3s; }
 button { border: none; background: none; font-family: inherit; cursor: pointer; padding: 0; }
 button:focus, button:focus-visible { outline: none; }
 
-/* 스크롤바 커스텀 */
+/* 스크롤바 스타일 */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #141414; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
 ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #888; }
