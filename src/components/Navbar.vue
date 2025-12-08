@@ -1,9 +1,9 @@
 <template>
   <nav class="navbar" :class="{ 'black-nav': isScrolled, 'hover-nav': isHovered }" @mouseenter="isHovered = true" @mouseleave="isHovered = false">
     <div class="left-section">
-      <router-link to="/" class="logo-link">
+      <a class="logo-link" @click.prevent="handleLogoClick">
         <img src="../assets/yjy.png" alt="YJY PROJECT" class="logo-img" />
-      </router-link>
+      </a>
       <div class="links">
         <router-link to="/">홈</router-link>
         <router-link to="/popular">인기 콘텐츠</router-link>
@@ -17,14 +17,13 @@
         <input v-if="showSearch" ref="searchInput" v-model="searchQuery" @keyup.enter="goToSearch" placeholder="제목, 사람, 장르" />
       </div>
 
-      <i
-          class="fas icon theme-btn"
-          :class="theme === 'dark' ? 'fa-moon' : 'fa-sun'"
-          @click="store.toggleTheme"
-          title="테마 변경"
-      ></i>
+      <i class="fas icon theme-btn" :class="theme === 'dark' ? 'fa-sun' : 'fa-moon'" @click="store.toggleTheme" title="테마 변경"></i>
 
-      <i class="fas fa-bell icon"></i>
+      <select v-model="language" @change="changeLang" class="nav-lang-selector" title="언어 변경">
+        <option value="ko-KR">KR</option>
+        <option value="en-US">EN</option>
+      </select>
+
       <div class="profile-menu">
         <div class="profile-icon">
           <img src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Netflix-avatar.png" alt="User" />
@@ -50,7 +49,7 @@ import { useMovieStore } from '../stores/movieStore'
 import { storeToRefs } from 'pinia'
 
 const store = useMovieStore()
-const { email, theme } = storeToRefs(store) // theme 추가
+const { email, theme, language } = storeToRefs(store)
 
 const isScrolled = ref(false)
 const isHovered = ref(false)
@@ -78,6 +77,18 @@ const handleLogout = () => {
   router.push('/signin')
 }
 
+const handleLogoClick = () => {
+  if (route.path === '/') {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  } else {
+    router.push('/')
+  }
+}
+
+const changeLang = () => {
+  store.setLanguage(language.value)
+}
+
 const toggleSearch = () => { showSearch.value = !showSearch.value; if (showSearch.value) nextTick(() => searchInput.value?.focus()) }
 const goToSearch = () => { if (searchQuery.value.trim()) router.push({ path: '/search', query: { q: searchQuery.value } }) }
 </script>
@@ -94,8 +105,17 @@ const goToSearch = () => { if (searchQuery.value.trim()) router.push({ path: '/s
 .links a:hover, .links a.router-link-active { color: #fff; font-weight: bold; }
 .right-section { display: flex; align-items: center; gap: 20px; color: white; }
 .icon { font-size: 1.2rem; cursor: pointer; }
-.theme-btn { margin-right: 10px; font-size: 1.2rem; transition: transform 0.3s; }
+.theme-btn { margin-right: 5px; font-size: 1.2rem; transition: transform 0.3s; }
 .theme-btn:hover { color: #e50914; transform: rotate(20deg); }
+
+.nav-lang-selector {
+  background: transparent; color: #fff; border: 1px solid #fff; border-radius: 4px;
+  padding: 4px 8px; font-size: 0.8rem; cursor: pointer; margin-right: 10px; outline: none;
+}
+.nav-lang-selector option { background: #333; color: #fff; }
+:global(body.light-mode) .nav-lang-selector { color: #333; border-color: #333; }
+:global(body.light-mode) .nav-lang-selector option { background: #fff; color: #333; }
+
 .search-box { display: flex; align-items: center; gap: 10px; padding: 5px; border: 1px solid transparent; }
 .search-box.active { border: 1px solid #fff; background: rgba(0,0,0,0.8); padding: 5px 10px; }
 .search-box input { background: transparent; border: none; color: white; width: 200px; outline: none; }
@@ -105,10 +125,32 @@ const goToSearch = () => { if (searchQuery.value.trim()) router.push({ path: '/s
 .profile-menu:hover .dropdown-arrow { transform: rotate(180deg); }
 .dropdown { position: absolute; top: 100%; right: 0; padding-top: 10px; display: none; }
 .profile-menu:hover .dropdown { display: block; }
-.dropdown-content { background-color: rgba(0,0,0,0.95); border: 1px solid #333; width: 150px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+
+/* [기본] 다크 모드 드롭다운 */
+.dropdown-content {
+  background-color: rgba(0,0,0,0.95);
+  border: 1px solid #333;
+  width: 150px; padding: 15px;
+  display: flex; flex-direction: column; gap: 10px;
+}
 .dropdown span { font-size: 0.8rem; color: #ccc; }
 .dropdown hr { border: 0.5px solid #333; width: 100%; margin: 0; }
-.drop-link, .dropdown button { color: white; text-decoration: none; font-size: 0.9rem; background: none; border: none; text-align: left; cursor: pointer; padding: 0; }
+.drop-link, .dropdown button {
+  color: white;
+  text-decoration: none; font-size: 0.9rem; background: none; border: none; text-align: left; cursor: pointer; padding: 0;
+}
 .drop-link:hover, .dropdown button:hover { text-decoration: underline; }
+
+/* [수정] 라이트 모드 드롭다운 스타일 (흰색 배경, 검은 글씨) */
+:global(body.light-mode) .dropdown-content {
+  background-color: #ffffff;
+  border-color: #ddd;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+:global(body.light-mode) .dropdown span { color: #666; }
+:global(body.light-mode) .dropdown hr { border-color: #eee; }
+:global(body.light-mode) .drop-link,
+:global(body.light-mode) .dropdown button { color: #333; }
+
 @media (max-width: 768px) { .links { display: none; } }
 </style>

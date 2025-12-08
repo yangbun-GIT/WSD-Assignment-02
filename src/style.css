@@ -1,15 +1,7 @@
-/* 전역 변수 및 기본 설정 */
 :root {
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     font-weight: 400;
-
-    /* [수정] 다크 모드 기본 텍스트 색상 (더 밝게) */
-    --text-primary: #ffffff;
-    --text-secondary: #b3b3b3;
-    --bg-primary: #141414;
-    --bg-secondary: #1f1f1f;
-
     color-scheme: dark;
 }
 
@@ -18,56 +10,125 @@ body {
     padding: 0;
     width: 100%;
     min-height: 100vh;
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
+    background: radial-gradient(circle at center, #141414 0%, #000000 100%);
+    background-attachment: fixed;
+    color: white;
     overflow-x: hidden;
-    transition: background-color 0.3s, color 0.3s;
+    transition: background 0.3s, color 0.3s;
 }
 
 /* =========================================
-   [수정] 라이트 모드 스타일 강화 (가독성 개선)
+   [1. 전역 초기화 (거대한 V자 방지)]
+   어떤 페이지에서도 select 박스에 배경 이미지가
+   자동으로 생기지 않도록 강제로 막습니다.
+========================================= */
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: none !important; /* V자 이미지 원천 차단 */
+    background-color: transparent;
+}
+
+/* =========================================
+   [2. 라이트 모드 스타일 정의]
 ========================================= */
 body.light-mode {
-    /* 텍스트 변수 재할당 */
-    --text-primary: #111111; /* 거의 검은색으로 진하게 */
-    --text-secondary: #555555; /* 보조 텍스트도 진하게 */
-    --bg-primary: #f8f9fa;   /* 아주 밝은 회색 배경 */
-    --bg-secondary: #ffffff; /* 흰색 배경 */
-
-    background-color: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
+    background: #f3f3f3 !important;
+    color: #111 !important;
 }
 
-/* 라이트 모드 컴포넌트별 색상 강제 적용 */
-body.light-mode .navbar { background: var(--bg-secondary) !important; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+/* 네비게이션 바 & 요소들 */
+body.light-mode .navbar {
+    background: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
 body.light-mode .navbar a,
 body.light-mode .icon,
-body.light-mode .search-btn,
-body.light-mode h2,
-body.light-mode h3,
-body.light-mode p { color: var(--text-primary) !important; }
+body.light-mode .search-btn {
+    color: #333 !important;
+}
 
-/* 입력창 및 모달 가독성 확보 */
+/* [수정] 프로필 드롭다운 메뉴 (라이트 모드에서 하얗게) */
+body.light-mode .dropdown-content {
+    background-color: #ffffff !important;
+    border: 1px solid #ddd !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15) !important;
+}
+body.light-mode .dropdown span,
+body.light-mode .drop-link,
+body.light-mode .dropdown button {
+    color: #333 !important;
+}
+body.light-mode .dropdown hr {
+    border-color: #eee !important;
+}
+
+/* 영화 카드 */
+body.light-mode .movie-card {
+    background: #ffffff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+}
+
+/* 입력창 공통 */
 body.light-mode input,
 body.light-mode select,
-body.light-mode .search-bar,
+body.light-mode .search-bar {
+    background: #ffffff !important;
+    color: #333 !important;
+    border: 1px solid #ccc !important;
+}
+
+/* 텍스트 가독성 */
+body.light-mode h2,
+body.light-mode h3,
+body.light-mode h4,
+body.light-mode p,
+body.light-mode span,
+body.light-mode .row-title {
+    color: #111111 !important;
+}
+
+/* 모달창 */
 body.light-mode .modal-content {
-    background: var(--bg-secondary) !important;
-    color: var(--text-primary) !important;
-    border-color: #ddd !important;
+    background: #ffffff !important;
+    color: #333 !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+/* 모달 헤더 텍스트는 배경 이미지 위이므로 흰색 유지 */
+body.light-mode .modal-title h1,
+body.light-mode .modal-meta span,
+body.light-mode .hero-content h1,
+body.light-mode .hero-content p {
+    color: #ffffff !important;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.9);
 }
 body.light-mode .modal-body,
-body.light-mode .overview { color: #333 !important; }
+body.light-mode .overview {
+    color: #444 !important;
+}
+body.light-mode .genre-tag {
+    background-color: #f0f0f0 !important;
+    color: #333 !important;
+    border: 1px solid #ccc !important;
+    font-weight: 600;
+}
+body.light-mode .close-btn {
+    background: rgba(255, 255, 255, 0.8);
+    color: #000;
+}
+body.light-mode .close-btn:hover {
+    background: #fff;
+}
 
-
-/* 공통 스타일 유지 */
+/* 공통 */
 #app { width: 100%; max-width: 100%; margin: 0; padding: 0; }
 a { text-decoration: none; color: inherit; transition: 0.3s; }
 button { border: none; background: none; font-family: inherit; cursor: pointer; padding: 0; }
 button:focus, button:focus-visible { outline: none; }
 
-/* 스크롤바 스타일 */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-track { background: #141414; }
 ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #888; }

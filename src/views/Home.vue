@@ -1,49 +1,47 @@
 <template>
-  <div class="home">
+  <div class="home-container">
     <Navbar />
 
-    <div v-if="featuredMovie" class="hero" :style="{ backgroundImage: `url(https://image.tmdb.org/t/p/original${featuredMovie.backdrop_path})` }">
-      <button class="hero-arrow left" @click="prevBanner"><i class="fas fa-chevron-left"></i></button>
+    <div class="hero-wrapper" v-if="featuredMovie">
+      <transition name="fade-hero" mode="out-in">
+        <header :key="featuredMovie.id" class="hero-banner" :style="bannerStyle">
+          <button class="hero-arrow left" @click="prevBanner">
+            <i class="fas fa-chevron-left"></i>
+          </button>
 
-      <div class="hero-content">
-        <h1 class="hero-title">{{ featuredMovie.title }}</h1>
-        <p class="hero-desc">
-          {{ truncate(featuredMovie.overview, 150) }}
-          <span v-if="featuredMovie.overview.length > 150" class="more-btn" @click="openModal(featuredMovie)">더보기</span>
-        </p>
-        <div class="hero-buttons">
-          <button class="btn play"><i class="fas fa-play"></i> 재생</button>
-          <button class="btn info" @click="openModal(featuredMovie)"><i class="fas fa-info-circle"></i> 상세 정보</button>
-        </div>
-      </div>
+          <div class="hero-content">
+            <h1 class="hero-title">{{ featuredMovie.title || featuredMovie.name }}</h1>
+            <p class="hero-overview">{{ truncate(featuredMovie.overview, 150) }}</p>
+            <div class="hero-buttons">
+              <button class="btn btn-play"><i class="fas fa-play"></i> 재생</button>
+              <button class="btn btn-info" @click="openModal(featuredMovie)"><i class="fas fa-info-circle"></i> 상세 정보</button>
+            </div>
+          </div>
 
-      <button class="hero-arrow right" @click="nextBanner"><i class="fas fa-chevron-right"></i></button>
+          <button class="hero-arrow right" @click="nextBanner">
+            <i class="fas fa-chevron-right"></i>
+          </button>
 
-      <div class="hero-gradient"></div>
+          <div class="hero-fade-bottom"></div>
+        </header>
+      </transition>
     </div>
+    <div v-else class="hero-skeleton"></div>
 
-    <div class="rows-container">
-      <MovieRow title="인기 콘텐츠" :movies="popularMovies" @card-click="openModal" />
-      <MovieRow title="최신 콘텐츠" :movies="nowPlayingMovies" @card-click="openModal" />
-      <MovieRow title="평단의 찬사 (높은 평점)" :movies="topRatedMovies" @card-click="openModal" />
-      <MovieRow title="액션" :movies="actionMovies" @card-click="openModal" />
-      <MovieRow title="코미디" :movies="comedyMovies" @card-click="openModal" />
-      <MovieRow title="공포" :movies="horrorMovies" @card-click="openModal" />
-      <MovieRow title="SF / 판타지" :movies="scifiMovies" @card-click="openModal" />
-    </div>
-
-    <transition name="fade">
-      <button v-show="showTopBtn" class="top-btn" @click="scrollToTop">
-        <i class="fas fa-arrow-up"></i>
-      </button>
-    </transition>
+    <main class="main-content">
+      <MovieRow title="인기 콘텐츠" :movies="popularMovies" @movie-click="openModal" />
+      <MovieRow title="지금 뜨는 콘텐츠" :movies="nowPlayingMovies" @movie-click="openModal" />
+      <MovieRow title="평점 높은 영화" :movies="topRatedMovies" @movie-click="openModal" />
+      <MovieRow title="액션 스릴러" :movies="actionMovies" @movie-click="openModal" />
+      <MovieRow title="코미디" :movies="comedyMovies" @movie-click="openModal" />
+    </main>
 
     <MovieModal v-if="showModal" :movie="selectedMovie" @close="showModal = false" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import tmdb from '../api/tmdb'
 import Navbar from '../components/Navbar.vue'
 import MovieRow from '../components/MovieRow.vue'
@@ -52,85 +50,165 @@ import MovieModal from '../components/MovieModal.vue'
 const featuredMovie = ref<any>(null)
 const bannerIndex = ref(0)
 let bannerInterval: any = null
-const showModal = ref(false)
-const selectedMovie = ref<any>(null)
-const showTopBtn = ref(false)
 
 const popularMovies = ref([])
 const nowPlayingMovies = ref([])
 const topRatedMovies = ref([])
 const actionMovies = ref([])
 const comedyMovies = ref([])
-const horrorMovies = ref([])
-const scifiMovies = ref([])
 
-const truncate = (str: string, n: number) => str?.length > n ? str.substr(0, n - 1) + "..." : str;
+const showModal = ref(false)
+const selectedMovie = ref<any>(null)
+
+const bannerStyle = computed(() => {
+  if (!featuredMovie.value) return {}
+  const path = featuredMovie.value.backdrop_path || featuredMovie.value.poster_path
+  return {
+    backgroundImage: `url(https://image.tmdb.org/t/p/original${path})`,
+    backgroundPosition: 'top center',
+    backgroundSize: 'cover',
+  }
+})
+
 const openModal = (movie: any) => { selectedMovie.value = movie; showModal.value = true }
-
-const handleScroll = () => { showTopBtn.value = window.scrollY > 500 }
-const scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }) }
+const truncate = (str: string, n: number) => str?.length > n ? str.substr(0, n - 1) + "..." : str;
 
 const updateBanner = () => {
   if (popularMovies.value.length > 0) {
     featuredMovie.value = popularMovies.value[bannerIndex.value]
   }
 }
-const nextBanner = () => { bannerIndex.value = (bannerIndex.value + 1) % popularMovies.value.length; updateBanner(); resetTimer(); }
-const prevBanner = () => { bannerIndex.value = (bannerIndex.value - 1 + popularMovies.value.length) % popularMovies.value.length; updateBanner(); resetTimer(); }
-const resetTimer = () => { clearInterval(bannerInterval); bannerInterval = setInterval(nextBanner, 60000) }
-
-const fetchAllMovies = async () => {
-  try {
-    const [pop, now, top, act, com, hor, sci] = await Promise.all([
-      tmdb.get('/movie/popular'), tmdb.get('/movie/now_playing'), tmdb.get('/movie/top_rated'),
-      tmdb.get('/discover/movie', { params: { with_genres: 28 } }),
-      tmdb.get('/discover/movie', { params: { with_genres: 35 } }),
-      tmdb.get('/discover/movie', { params: { with_genres: 27 } }),
-      tmdb.get('/discover/movie', { params: { with_genres: 878 } })
-    ])
-    popularMovies.value = pop.data.results; nowPlayingMovies.value = now.data.results; topRatedMovies.value = top.data.results
-    actionMovies.value = act.data.results; comedyMovies.value = com.data.results; horrorMovies.value = hor.data.results; scifiMovies.value = sci.data.results
-    updateBanner(); resetTimer();
-  } catch (error) { console.error(error) }
+const nextBanner = () => {
+  bannerIndex.value = (bannerIndex.value + 1) % popularMovies.value.length
+  updateBanner()
+  resetTimer()
+}
+const prevBanner = () => {
+  bannerIndex.value = (bannerIndex.value - 1 + popularMovies.value.length) % popularMovies.value.length
+  updateBanner()
+  resetTimer()
+}
+const resetTimer = () => {
+  clearInterval(bannerInterval)
+  // [수정] 1분(60000ms) 간격으로 자동 슬라이드
+  bannerInterval = setInterval(nextBanner, 60000)
 }
 
-onMounted(() => { fetchAllMovies(); window.addEventListener('scroll', handleScroll) })
-onUnmounted(() => { clearInterval(bannerInterval); window.removeEventListener('scroll', handleScroll) })
+onMounted(async () => {
+  const [pop, now, top, act, com] = await Promise.all([
+    tmdb.get('/movie/popular'),
+    tmdb.get('/movie/now_playing'),
+    tmdb.get('/movie/top_rated'),
+    tmdb.get('/discover/movie', { params: { with_genres: 28 } }),
+    tmdb.get('/discover/movie', { params: { with_genres: 35 } }),
+  ])
+
+  popularMovies.value = pop.data.results
+  nowPlayingMovies.value = now.data.results
+  topRatedMovies.value = top.data.results
+  actionMovies.value = act.data.results
+  comedyMovies.value = com.data.results
+
+  updateBanner()
+  resetTimer()
+})
+
+onUnmounted(() => {
+  clearInterval(bannerInterval)
+})
 </script>
 
 <style scoped>
-.home { min-height: 100vh; position: relative; }
-.hero { position: relative; height: 85vh; background-size: cover; background-position: center top; display: flex; align-items: center; color: white; transition: background-image 0.5s ease-in-out; }
-.hero-content { margin-left: 80px; max-width: 600px; z-index: 10; margin-top: 50px; flex: 1; padding-right: 40px; }
-.hero-title { font-size: 4rem; font-weight: 800; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); margin-bottom: 20px; }
-.hero-desc { font-size: 1.3rem; line-height: 1.5; margin-bottom: 30px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-.hero-buttons { display: flex; gap: 15px; }
-.btn { border: none; padding: 12px 30px; border-radius: 4px; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; }
-.btn.play { background: white; color: black; }
-.btn.play:hover { background: rgba(255,255,255,0.75); }
-.btn.info { background: rgba(109, 109, 110, 0.7); color: white; }
-.btn.info:hover { background: rgba(109, 109, 110, 0.4); }
-.hero-gradient { position: absolute; bottom: 0; left: 0; width: 100%; height: 300px; background: linear-gradient(to top, #141414 0%, rgba(20, 20, 20, 0.8) 40%, transparent 100%); }
+.home-container { min-height: 100vh; }
 
-/* [수정] 박스 제거 및 아이콘 스타일 */
-.hero-arrow {
-  background: none !important; /* 배경 강제 제거 */
-  border: none; color: white; font-size: 3.5rem;
-  padding: 0; cursor: pointer; z-index: 20; height: 100%;
-  position: absolute; top: 0; opacity: 0;
-  transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
-  width: 60px; text-shadow: 0 0 15px rgba(0,0,0,0.9); /* 그림자로 아이콘 부각 */
+.hero-wrapper {
+  position: relative;
+  height: 85vh;
+  overflow: hidden;
+  background-color: #000;
 }
-.hero-arrow.left { left: 10px; }
-.hero-arrow.right { right: 10px; }
-.hero:hover .hero-arrow { opacity: 0.7; }
-.hero-arrow:hover { opacity: 1 !important; transform: scale(1.2); }
 
-.rows-container { position: relative; z-index: 20; margin-top: -100px; background: transparent; padding-bottom: 50px; }
-.more-btn { color: #888; font-weight: bold; cursor: pointer; margin-left: 5px; font-size: 1rem; }
-.more-btn:hover { text-decoration: underline; color: white; }
-.top-btn { position: fixed; bottom: 30px; right: 30px; background: #e50914; color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; transition: transform 0.3s, background 0.3s; }
-.top-btn:hover { background: #f40612; transform: translateY(-5px); }
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.hero-banner {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  display: flex; align-items: center;
+}
+
+/* [추가] 부드러운 페이드 인/아웃 애니메이션 */
+.fade-hero-enter-active,
+.fade-hero-leave-active {
+  transition: opacity 0.8s ease-in-out;
+}
+.fade-hero-enter-from,
+.fade-hero-leave-to {
+  opacity: 0;
+}
+
+.hero-content {
+  margin-left: 4%;
+  max-width: 600px;
+  z-index: 10;
+  padding-top: 80px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  color: white !important;
+}
+
+.hero-overview {
+  width: 100%;
+  line-height: 1.5;
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+  color: white !important;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* [수정] 버튼 크기 확대 (가시성 개선) */
+.hero-buttons { display: flex; gap: 15px; margin-top: 20px; }
+.btn {
+  cursor: pointer; border: none; font-weight: 700; border-radius: 4px;
+  padding: 1rem 2.5rem; font-size: 1.2rem; /* 크기 키움 */
+  display: flex; align-items: center; gap: 12px;
+  transition: transform 0.2s, background-color 0.2s;
+}
+.btn-play { background-color: white; color: black; }
+.btn-play:hover { background-color: #dcdcdc; transform: scale(1.05); }
+.btn-info { background-color: rgba(109, 109, 110, 0.8); color: white; }
+.btn-info:hover { background-color: rgba(109, 109, 110, 1); transform: scale(1.05); }
+
+/* [수정] 화살표 스타일: 배경 박스 제거하고 아이콘만 남김 */
+.hero-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: transparent; /* 배경 투명 */
+  border: none; color: white;
+  font-size: 3.5rem; /* 아이콘 키움 */
+  padding: 20px; cursor: pointer; z-index: 20;
+  opacity: 0; transition: opacity 0.3s, transform 0.2s;
+  text-shadow: 0 0 15px rgba(0,0,0,0.9); /* 그림자 추가 */
+}
+.hero-banner:hover .hero-arrow { opacity: 1; }
+.hero-arrow:hover { transform: translateY(-50%) scale(1.2); color: #e50914; } /* 호버 시 빨간색 포인트 */
+.left { left: 10px; }
+.right { right: 10px; }
+
+.hero-fade-bottom { position: absolute; bottom: 0; width: 100%; height: 10rem; background-image: linear-gradient(180deg, transparent, rgba(0,0,0,0.8)); }
+.main-content { position: relative; z-index: 20; margin-top: 0; padding-top: 20px; }
+.hero-skeleton { height: 85vh; width: 100%; background: #2f2f2f; }
+
+@media (max-width: 768px) {
+  .hero-wrapper, .hero-banner, .hero-skeleton { height: 60vh; }
+  .hero-title { font-size: 2rem; }
+  .hero-overview { font-size: 1rem; }
+  .hero-arrow { display: none; }
+  .btn { padding: 0.8rem 1.5rem; font-size: 1rem; }
+}
 </style>

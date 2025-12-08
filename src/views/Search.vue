@@ -5,7 +5,6 @@
       <h2>콘텐츠 찾아보기</h2>
 
       <div class="search-controls">
-
         <div class="search-bar">
           <button class="search-btn" @click="executeSearch" title="검색">
             <i class="fas fa-search"></i>
@@ -19,7 +18,6 @@
         </div>
 
         <div class="filters">
-
           <select v-model="selectedGenre" @change="executeSearch">
             <option value="">모든 장르</option>
             <option v-for="genre in genres" :key="genre.id" :value="genre.id">{{ genre.name }}</option>
@@ -53,9 +51,7 @@
         </div>
       </div>
 
-      <div v-if="isLoading" class="loading-msg">
-        <i class="fas fa-spinner fa-spin"></i> 검색 중...
-      </div>
+      <div v-if="isLoading" class="loading-msg"><i class="fas fa-spinner fa-spin"></i> 검색 중...</div>
       <div v-else-if="movies.length === 0" class="no-result">검색 결과가 없습니다.</div>
       <div v-else class="grid-container">
         <MovieCard v-for="movie in movies" :key="movie.id" :movie="movie" @click="openModal(movie)" />
@@ -76,44 +72,23 @@ import MovieCard from '../components/MovieCard.vue'
 import MovieModal from '../components/MovieModal.vue'
 
 const store = useMovieStore()
-const { searchHistory, language } = storeToRefs(store)
+const { searchHistory } = storeToRefs(store)
 
 const movies = ref<any[]>([])
 const genres = ref<any[]>([])
 const keyword = ref('')
-
 const selectedGenre = ref('')
 const selectedRating = ref('')
 const selectedFilterLang = ref('')
-const currentLang = ref(language.value)
-
 const isLoading = ref(false)
 const route = useRoute()
 const showModal = ref(false)
 const selectedMovie = ref<any>(null)
 
 const openModal = (movie: any) => { selectedMovie.value = movie; showModal.value = true }
-
-const executeSearch = () => {
-  if (keyword.value.trim()) {
-    store.addSearchHistory(keyword.value)
-  }
-  handleSearch()
-}
-
-const clickTag = (tag: string) => {
-  keyword.value = tag
-  handleSearch()
-}
-
-const deleteTag = (tag: string) => {
-  store.removeSearchHistory(tag)
-}
-
-const changeLang = () => {
-  store.setLanguage(currentLang.value)
-}
-
+const executeSearch = () => { if (keyword.value.trim()) store.addSearchHistory(keyword.value); handleSearch() }
+const clickTag = (tag: string) => { keyword.value = tag; handleSearch() }
+const deleteTag = (tag: string) => store.removeSearchHistory(tag)
 const fetchGenres = async () => { try { const res = await tmdb.get('/genre/movie/list'); genres.value = res.data.genres } catch (e) {} }
 
 const handleSearch = async () => {
@@ -121,47 +96,19 @@ const handleSearch = async () => {
   try {
     let endpoint = '/discover/movie'
     const params: any = { page: 1, sort_by: 'popularity.desc' }
-
-    if (keyword.value.trim()) {
-      endpoint = '/search/movie'
-      params.query = keyword.value
-    } else {
+    if (keyword.value.trim()) { endpoint = '/search/movie'; params.query = keyword.value }
+    else {
       if (selectedGenre.value) params.with_genres = selectedGenre.value
       if (selectedRating.value) params['vote_average.gte'] = selectedRating.value
       if (selectedFilterLang.value) params.with_original_language = selectedFilterLang.value
     }
-
     const res = await tmdb.get(endpoint, { params })
     movies.value = res.data.results
   } catch (error) { console.error(error) } finally { isLoading.value = false }
 }
-
-const resetFilters = () => {
-  keyword.value = ''
-  selectedGenre.value = ''
-  selectedRating.value = ''
-  selectedFilterLang.value = ''
-  handleSearch()
-}
-
-watch(() => route.query.q, (newQuery) => {
-  if (newQuery) {
-    keyword.value = newQuery as string
-    store.addSearchHistory(keyword.value)
-    handleSearch()
-  }
-})
-
-onMounted(async () => {
-  await fetchGenres()
-  if (route.query.q) {
-    keyword.value = route.query.q as string
-    store.addSearchHistory(keyword.value)
-    handleSearch()
-  } else {
-    handleSearch()
-  }
-})
+const resetFilters = () => { keyword.value = ''; selectedGenre.value = ''; selectedRating.value = ''; selectedFilterLang.value = ''; handleSearch() }
+watch(() => route.query.q, (newQuery) => { if (newQuery) { keyword.value = newQuery as string; store.addSearchHistory(keyword.value); handleSearch() } })
+onMounted(async () => { await fetchGenres(); if (route.query.q) { keyword.value = route.query.q as string; store.addSearchHistory(keyword.value); handleSearch() } else { handleSearch() } })
 </script>
 
 <style scoped>
@@ -169,72 +116,37 @@ onMounted(async () => {
 .content { padding: 100px 4% 40px; }
 h2 { margin-bottom: 20px; font-weight: bold; }
 
-/* [핵심 수정] 컨트롤러를 가로로 배치 */
-.search-controls {
-  display: flex;
-  flex-wrap: wrap; /* 화면 좁으면 자동 줄바꿈 */
-  gap: 15px;
-  margin-bottom: 30px;
-  align-items: center; /* 수직 중앙 정렬 */
-}
+.search-controls { display: flex; flex-direction: row; flex-wrap: wrap; gap: 15px; margin-bottom: 30px; align-items: center; }
 
-/* 검색바 스타일 */
 .search-bar {
-  display: flex;
-  align-items: center;
-  background: #333;
-  border: 1px solid #555;
-  border-radius: 4px;
-  overflow: hidden;
-  width: 300px; /* 고정 너비로 변경하여 필터와 어울리게 함 */
-  flex-shrink: 0; /* 줄어들지 않도록 고정 */
+  display: flex; align-items: center; background: #333; border: 1px solid #555; border-radius: 4px; overflow: hidden;
+  flex-grow: 1; min-width: 300px;
 }
-
 .search-bar:focus-within { border-color: #e50914; }
-
-.search-btn {
-  background: transparent; border: none; color: #888;
-  padding: 10px 15px; cursor: pointer; font-size: 1.1rem;
-  transition: color 0.3s;
-}
+.search-btn { background: transparent; border: none; color: #888; padding: 12px 15px; cursor: pointer; font-size: 1.1rem; transition: color 0.3s; }
 .search-btn:hover { color: #e50914; }
+.search-bar input { flex: 1; background: transparent; border: none; color: white; font-size: 1rem; padding: 12px 10px; outline: none; }
 
-.search-bar input {
-  flex: 1; background: transparent; border: none; color: white;
-  font-size: 1rem; padding: 10px; outline: none;
+.filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; flex-shrink: 0; }
+
+/* [수정] 화살표 이미지 완전 제거 (문제 원천 차단) */
+.filters select {
+  padding: 10px 15px; /* 패딩 원상복구 */
+  background: #333; color: white; border: 1px solid #555; border-radius: 4px; cursor: pointer;
+  min-width: 120px; height: 42px;
+  /* 시스템 기본 화살표 사용하거나 아예 없앰 */
+  background-image: none !important;
 }
 
-/* 필터 그룹 (셀렉트 박스들) - 가로 정렬 */
-.filters {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap; /* 모바일 대응 */
-  align-items: center;
+/* 라이트 모드 */
+:global(body.light-mode) .filters select {
+  color: #333;
 }
 
-select {
-  padding: 10px 15px;
-  background: #333;
-  color: white;
-  border: 1px solid #555;
-  border-radius: 4px;
-  cursor: pointer;
-  min-width: 120px;
-  height: 42px;
-}
 select:focus { border-color: #e50914; outline: none; }
-.lang-setting { border-color: #888; color: #ccc; }
-
-.reset-btn {
-  background: #e50914; color: white; border: none;
-  padding: 0 20px; border-radius: 4px;
-  cursor: pointer; font-weight: bold;
-  white-space: nowrap; height: 42px;
-  transition: background 0.3s;
-}
+.reset-btn { background: #e50914; color: white; border: none; padding: 0 20px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap; height: 42px; transition: background 0.3s; }
 .reset-btn:hover { background: #f40612; }
 
-/* ... 나머지 스타일 유지 ... */
 .history-section { margin-bottom: 30px; }
 .history-section h3 { font-size: 1rem; color: #888; margin-bottom: 10px; }
 .history-tags { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -242,11 +154,7 @@ select:focus { border-color: #e50914; outline: none; }
 .tag:hover { background: rgba(109, 109, 110, 0.7); border-color: #fff; }
 .delete-btn { color: #888; font-size: 0.8rem; transition: color 0.2s; }
 .delete-btn:hover { color: #e50914; }
-
 .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
 .no-result, .loading-msg { text-align: center; margin-top: 50px; color: #888; font-size: 1.2rem; }
-@media (max-width: 768px) {
-  .grid-container { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
-  .search-bar { width: 100%; } /* 모바일에서는 검색창 꽉 차게 */
-}
+@media (max-width: 900px) { .search-controls { flex-direction: column; align-items: stretch; } .filters { justify-content: flex-start; } }
 </style>
