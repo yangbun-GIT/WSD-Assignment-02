@@ -80,7 +80,10 @@ const goToSearch = () => { if (searchQuery.value.trim()) router.push({ path: '/s
 .navbar.hover-nav { background-color: rgba(0,0,0,0.9); }
 .left-section { display: flex; align-items: center; gap: 40px; }
 .logo-link { display: flex; align-items: center; cursor: pointer; margin-right: 20px; }
-.logo-img { height: 40px; width: auto; object-fit: contain; display: block; }
+
+/* [수정] 로고 크기 40px -> 60px로 확대 */
+.logo-img { height: 60px; width: auto; object-fit: contain; display: block; }
+
 .links { display: flex; gap: 20px; }
 .links a { color: #e5e5e5; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
 .links a:hover, .links a.router-link-active { color: #fff; font-weight: bold; }
