@@ -2,7 +2,7 @@
     font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
     line-height: 1.5;
     font-weight: 400;
-    color-scheme: dark; /* 다크 모드 강제 */
+    color-scheme: dark;
 }
 
 body {
@@ -10,51 +10,26 @@ body {
     padding: 0;
     width: 100%;
     min-height: 100vh;
-    background-color: #141414; /* 넷플릭스 배경색 */
+    /* [핵심] 넷플릭스 스타일 그라데이션 배경 */
+    background: radial-gradient(circle at center, #2b2b2b 0%, #141414 100%);
+    background-attachment: fixed; /* 스크롤해도 배경 고정 */
     color: white;
-    overflow-x: hidden; /* 가로 스크롤 방지 */
+    overflow-x: hidden;
 }
 
 #app {
     width: 100%;
-    max-width: 100%; /* 너비 제한 해제 (중요) */
+    max-width: 100%;
     margin: 0;
-    padding: 0; /* 패딩 제거 */
-    text-align: left; /* 텍스트 좌측 정렬 */
-}
-
-/* 링크 스타일 초기화 */
-a {
-    text-decoration: none;
-    color: inherit;
-    transition: 0.3s;
-}
-
-/* 버튼 스타일 초기화 */
-button {
-    border: none;
-    background: none;
-    font-family: inherit;
-    cursor: pointer;
     padding: 0;
 }
-button:focus,
-button:focus-visible {
-    outline: none;
-}
 
-/* 커스텀 스크롤바 (넷플릭스 스타일) */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
-::-webkit-scrollbar-track {
-    background: #141414;
-}
-::-webkit-scrollbar-thumb {
-    background: #555;
-    border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: #888;
-}
+a { text-decoration: none; color: inherit; transition: 0.3s; }
+button { border: none; background: none; font-family: inherit; cursor: pointer; padding: 0; }
+button:focus, button:focus-visible { outline: none; }
+
+/* 스크롤바 커스텀 */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #141414; }
+::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #888; }

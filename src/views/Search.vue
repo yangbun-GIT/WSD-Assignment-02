@@ -86,8 +86,12 @@ onMounted(async () => { await fetchGenres(); if (route.query.q) keyword.value = 
 </script>
 
 <style scoped>
-/* 기존 CSS 동일 */
-.search-container { min-height: 100vh; background-color: #141414; color: white; }
+.search-container {
+  min-height: 100vh;
+  /* background-color: #141414; <-- 삭제 */
+  color: white;
+}
+/* ... 나머지 스타일 유지 ... */
 .content { padding: 100px 4% 40px; }
 h2 { margin-bottom: 20px; font-weight: bold; }
 .search-controls { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; align-items: center; position: relative; z-index: 50; }
@@ -97,14 +101,7 @@ h2 { margin-bottom: 20px; font-weight: bold; }
 select { padding: 12px 20px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; cursor: pointer; min-width: 120px; height: 100%; appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: .65em auto; padding-right: 2.5rem; }
 .reset-btn { background: #e50914; color: white; border: none; padding: 12px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; white-space: nowrap; height: 100%; }
 .reset-btn:hover { background: #f40612; }
+.grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; position: relative; z-index: 1; }
 .no-result, .loading-msg { text-align: center; margin-top: 50px; color: #888; font-size: 1.2rem; }
-
-/* [롤백] 카드 크기 200px로 복구 */
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-  position: relative; z-index: 1;
-}
 @media (max-width: 768px) { .grid-container { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); } .input-group { min-width: 100%; } }
 </style>

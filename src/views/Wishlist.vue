@@ -57,15 +57,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.page-container { min-height: 100vh; background-color: #141414; }
+.page-container {
+  min-height: 100vh;
+  /* background-color: #141414; <-- 삭제 */
+}
+/* ... 나머지 스타일 유지 ... */
 .content { padding: 100px 4% 40px; color: white; }
 h2 { margin-bottom: 20px; font-weight: bold; }
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-}
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
 .empty { text-align: center; margin-top: 150px; color: #666; }
 .sub-text { font-size: 0.9rem; margin-top: 10px; }
 </style>

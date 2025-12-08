@@ -166,32 +166,22 @@ onUnmounted(() => { if (observer) observer.disconnect() })
 </script>
 
 <style scoped>
-.popular-container { min-height: 100vh; background-color: #141414; color: white; }
+.popular-container {
+  min-height: 100vh;
+  /* background-color: #141414; <-- 삭제 */
+  color: white;
+}
+/* ... 나머지 스타일 유지 ... */
 .content { padding: 100px 4% 40px; }
 .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-
-.mode-toggle button {
-  background: transparent; color: #888; border: 1px solid #555;
-  padding: 8px 12px; font-size: 1.2rem; cursor: pointer; margin-left: 10px; border-radius: 4px; transition: 0.3s;
-}
+.mode-toggle button { background: transparent; color: #888; border: 1px solid #555; padding: 8px 12px; font-size: 1.2rem; cursor: pointer; margin-left: 10px; border-radius: 4px; transition: 0.3s; }
 .mode-toggle button:hover { color: white; border-color: white; }
 .mode-toggle button.active { background: #e50914; color: white; border-color: #e50914; }
-
-.grid-container {
-  display: grid;
-  /* [유지] 200px 최소 너비로 대화면에서 꽉 차게 */
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-}
-
+.grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
 .pagination { display: flex; justify-content: center; align-items: center; margin-top: 40px; gap: 20px; }
 .pagination button { background: #333; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; }
 .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
-
 .observer-sentinel { height: 80px; text-align: center; margin-top: 20px; color: #888; display: flex; align-items: center; justify-content: center; }
 .loading-text { font-size: 1.2rem; }
-
-@media (max-width: 768px) {
-  .grid-container { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-}
+@media (max-width: 768px) { .grid-container { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
 </style>

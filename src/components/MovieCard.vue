@@ -6,7 +6,9 @@
         :alt="movie.title"
         class="poster"
     />
-    <div v-else class="no-poster">이미지 준비중</div>
+    <div v-else class="no-poster">
+      <span>이미지 준비중</span>
+    </div>
 
     <div class="overlay">
       <p class="title">{{ movie.title }}</p>
@@ -25,9 +27,7 @@ const props = defineProps<{
   movie: { id: number; title: string; poster_path: string | null }
 }>()
 
-// [수정] 부모에게 알릴 이벤트 정의
 const emit = defineEmits(['click', 'toggle-like'])
-
 const isLiked = ref(false)
 
 const checkLike = () => {
@@ -46,7 +46,6 @@ const toggleLike = () => {
     localStorage.setItem('my-wishlist', JSON.stringify(wishlist))
     isLiked.value = true
   }
-  // [추가] 찜 상태가 변경되었음을 부모에게 알림 (찜 목록 페이지에서 즉시 삭제하기 위해)
   emit('toggle-like', props.movie.id, isLiked.value)
 }
 
@@ -55,14 +54,43 @@ onMounted(() => checkLike())
 
 <style scoped>
 .movie-card {
-  position: relative; cursor: pointer; border-radius: 6px; overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  border-radius: 6px;
+  overflow: hidden;
+  /* [핵심] 2:3 비율 강제 고정 */
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  background-color: #222;
   transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s;
 }
-.movie-card:hover { transform: scale(1.05) translateY(-5px); z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.7); }
+
+.movie-card:hover {
+  transform: scale(1.05);
+  z-index: 10;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.7);
+}
+
 .liked-border { border: 2px solid #e50914; }
 
-.poster { width: 100%; height: 100%; object-fit: cover; display: block; }
-.no-poster { width: 100%; height: 300px; background: #333; display: flex; align-items: center; justify-content: center; color: #888; }
+.poster {
+  width: 100%;
+  height: 100%;
+  /* [핵심] 비율 유지하며 꽉 채우기 */
+  object-fit: cover;
+  display: block;
+}
+
+.no-poster {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #333;
+  color: #888;
+  font-size: 0.9rem;
+}
 
 .overlay {
   position: absolute; bottom: 0; left: 0; right: 0;

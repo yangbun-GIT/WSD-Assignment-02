@@ -119,7 +119,12 @@ onUnmounted(() => clearInterval(bannerInterval))
 </script>
 
 <style scoped>
-.home { background-color: #141414; min-height: 100vh; }
+.home {
+  /* background-color: #141414;  <-- 이 줄 삭제됨 */
+  min-height: 100vh;
+}
+/* ... 나머지 스타일 유지 ... */
+/* (hero 섹션 등은 유지) */
 .hero { position: relative; height: 85vh; background-size: cover; background-position: center top; display: flex; align-items: center; color: white; transition: background-image 0.5s ease-in-out; }
 .hero-content { margin-left: 4%; max-width: 600px; z-index: 10; margin-top: 50px; flex: 1; }
 .hero-title { font-size: 4rem; font-weight: 800; text-shadow: 2px 2px 4px rgba(0,0,0,0.6); margin-bottom: 20px;}
@@ -130,13 +135,11 @@ onUnmounted(() => clearInterval(bannerInterval))
 .btn.play:hover { background: rgba(255,255,255,0.75); }
 .btn.info { background: rgba(109, 109, 110, 0.7); color: white; }
 .btn.info:hover { background: rgba(109, 109, 110, 0.4); }
-.hero-gradient { position: absolute; bottom: 0; left: 0; width: 100%; height: 15rem; background: linear-gradient(180deg, transparent, #141414); }
+.hero-gradient { position: absolute; bottom: 0; left: 0; width: 100%; height: 15rem; background: linear-gradient(180deg, transparent, #141414); } /* 여기 #141414는 그라데이션 자연스럽게 하기 위해 유지해도 무방하나, 투명으로 바꿔도 됨. 일단 유지 추천 */
 .hero-arrow { background: none; border: none; color: white; font-size: 3.5rem; padding: 20px; cursor: pointer; z-index: 20; height: 100%; position: absolute; top: 0; opacity: 0.2; transition: all 0.3s ease; display: flex; align-items: center; }
 .hero-arrow.left { left: 10px; } .hero-arrow.right { right: 10px; }
 .hero:hover .hero-arrow { opacity: 0.5; } .hero-arrow:hover { opacity: 1 !important; transform: scale(1.1); }
 .rows-container { position: relative; z-index: 20; margin-top: -100px; background: transparent; padding-bottom: 50px; }
-
-/* [수정] 더보기 버튼 스타일 */
 .more-btn { color: #888; font-weight: bold; cursor: pointer; margin-left: 5px; font-size: 1rem; }
 .more-btn:hover { text-decoration: underline; color: white; }
 </style>
