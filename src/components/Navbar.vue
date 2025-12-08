@@ -110,18 +110,20 @@ const goHome = () => {
 </script>
 
 <style scoped>
-.navbar { display: flex; justify-content: space-between; align-items: center; padding: 0 4%; position: fixed; top: 0; width: 100%; z-index: 1000; height: 70px; box-sizing: border-box; transition: background-color 0.4s ease; background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); }
+.navbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 4%; position: fixed; top: 0; width: 100%; z-index: 1000; height: 70px;
+  box-sizing: border-box; transition: background-color 0.4s ease;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+}
 .navbar.black-nav { background-color: #141414; }
 .navbar.hover-nav { background-color: rgba(0,0,0,0.9); }
 
 .left-section { display: flex; align-items: center; gap: 40px; }
 
 /* [수정] 로고 이미지 스타일 */
-.logo-link { display: flex; align-items: center; cursor: pointer; }
-.logo-img {
-  height: 40px; /* 로고 높이 */
-  object-fit: contain;
-}
+.logo-link { display: flex; align-items: center; cursor: pointer; margin-right: 20px; }
+.logo-img { height: 40px; width: auto; object-fit: contain; display: block; }
 
 .links { display: flex; gap: 20px; }
 .links a { color: #e5e5e5; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
@@ -129,13 +131,23 @@ const goHome = () => {
 
 .right-section { display: flex; align-items: center; gap: 20px; color: white; }
 .icon { font-size: 1.2rem; cursor: pointer; }
-.search-box { display: flex; align-items: center; gap: 10px; padding: 5px; border: 1px solid transparent; }
-.search-box.active { border: 1px solid #fff; background: rgba(0,0,0,0.8); padding: 5px 10px; }
+
+.search-box {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px; border: 1px solid transparent;
+}
+.search-box.active {
+  border: 1px solid #fff;
+  background: rgba(0,0,0,0.8);
+  padding: 5px 10px;
+}
 .search-box input { background: transparent; border: none; color: white; width: 200px; outline: none; }
+
 .profile-menu { position: relative; display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 10px 0; }
 .profile-icon img { width: 32px; height: 32px; border-radius: 4px; }
 .dropdown-arrow { font-size: 0.8rem; transition: transform 0.2s; }
 .profile-menu:hover .dropdown-arrow { transform: rotate(180deg); }
+
 .dropdown { position: absolute; top: 100%; right: 0; padding-top: 10px; display: none; }
 .profile-menu:hover .dropdown { display: block; }
 .dropdown-content { background-color: rgba(0,0,0,0.95); border: 1px solid #333; width: 150px; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
@@ -143,5 +155,6 @@ const goHome = () => {
 .dropdown hr { border: 0.5px solid #333; width: 100%; margin: 0; }
 .drop-link, .dropdown button { color: white; text-decoration: none; font-size: 0.9rem; background: none; border: none; text-align: left; cursor: pointer; padding: 0; }
 .drop-link:hover, .dropdown button:hover { text-decoration: underline; }
+
 @media (max-width: 768px) { .links { display: none; } }
 </style>
