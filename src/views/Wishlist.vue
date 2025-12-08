@@ -1,7 +1,6 @@
 <template>
   <div class="page-container">
     <Navbar />
-
     <div class="content">
       <h2>내가 찜한 콘텐츠</h2>
       <div v-if="movies.length === 0" class="empty">
@@ -9,43 +8,36 @@
         <p class="sub-text">마음에 드는 영화를 찜해보세요!</p>
       </div>
       <div v-else class="grid">
-        <MovieCard v-for="movie in movies" :key="movie.id" :movie="movie" @click="openModal(movie)" @toggle-like="handleToggleLike" />
+        <MovieCard v-for="movie in movies" :key="movie.id" :movie="movie" @click="openModal(movie)" />
       </div>
     </div>
-
     <transition name="fade">
-      <button v-show="showTopBtn" class="top-btn" @click="scrollToTop">
-        <i class="fas fa-arrow-up"></i>
-      </button>
+      <button v-show="showTopBtn" class="top-btn" @click="scrollToTop"><i class="fas fa-arrow-up"></i></button>
     </transition>
-
     <MovieModal v-if="showModal" :movie="selectedMovie" @close="showModal = false" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useMovieStore } from '../stores/movieStore'
+import { storeToRefs } from 'pinia'
 import Navbar from '../components/Navbar.vue'
 import MovieCard from '../components/MovieCard.vue'
 import MovieModal from '../components/MovieModal.vue'
 
-const movies = ref<any[]>([])
+const store = useMovieStore()
+const { wishlist: movies } = storeToRefs(store)
+
 const showModal = ref(false)
 const selectedMovie = ref<any>(null)
 const showTopBtn = ref(false)
 
 const openModal = (movie: any) => { selectedMovie.value = movie; showModal.value = true }
-const handleToggleLike = (movieId: number, isLiked: boolean) => { if (!isLiked) movies.value = movies.value.filter(m => m.id !== movieId) }
-
 const handleScroll = () => { showTopBtn.value = window.scrollY > 500 }
 const scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
-onMounted(() => {
-  const savedData = localStorage.getItem('my-wishlist')
-  if (savedData) movies.value = JSON.parse(savedData)
-  window.addEventListener('scroll', handleScroll)
-})
-
+onMounted(() => { window.addEventListener('scroll', handleScroll) })
 onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 </script>
 
