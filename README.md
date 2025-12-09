@@ -20,6 +20,19 @@
 
 <br/>
 
+## 🤖 AI Co-Pilot Development Report
+
+이 프로젝트는 AI Assistant(ChatGPT/Claude)를 활용하여 개발 생산성과 UI/UX 완성도를 높였습니다.
+
+### 1. AI 활용 주요 기능 구현
+- **Sliding Auth UI:** `SignIn.vue`의 로그인/회원가입 전환 애니메이션 로직 및 CSS 구현.
+- **Responsive Layout:** 모바일/PC 반응형 레이아웃(`@media`) 구조 설계 및 버그 수정.
+- **Light/Dark Mode:** 테마 변경 시 가시성 문제(텍스트 색상, 배경) 자동 감지 및 CSS 변수 제안.
+
+### 2. Prompt Engineering 활용 사례
+- **Iterative Debugging:** Vite 빌드 에러 및 CSS 겹침 현상 발생 시, 에러 로그와 스크린샷을 제공하여 단계적으로 코드를 수정함.
+- **Context-Aware Styling:** "넷플릭스 스타일"이라는 컨텍스트를 부여하여 Glassmorphism, Floating Label 등 고급 디자인 패턴을 적용함.
+
 ## 🛠 기술 스택 (Tech Stack)
 
 | 분류 | 기술 | 비고 |
