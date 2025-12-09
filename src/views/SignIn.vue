@@ -8,7 +8,7 @@
 
       <div class="form-container sign-up-container">
         <form @submit.prevent="handleSignUp">
-          <h1>회원가입</h1>
+          <h1>멤버십 시작하기</h1>
           <div class="social-container">
             <button type="button" class="social-btn google-btn">
               <i class="fab fa-google"></i> Google로 시작하기
@@ -24,11 +24,16 @@
           </div>
           <div class="input-group">
             <input type="password" v-model="signupApiKey" required placeholder=" " />
-            <label>비밀번호 (TMDB API KEY) 입력</label>
+            <label>비밀번호 (TMDB API KEY)</label>
           </div>
           <div class="input-group">
             <input type="password" v-model="signupApiKeyConfirm" required placeholder=" " />
             <label>비밀번호 확인</label>
+          </div>
+
+          <div class="checkbox-group">
+            <input type="checkbox" id="terms" v-model="agreeTerms" />
+            <label for="terms">이용 약관 및 개인정보 처리방침에 동의합니다. (필수)</label>
           </div>
 
           <button class="action-btn">동의하고 가입하기</button>
@@ -53,14 +58,21 @@
 
           <div class="input-group">
             <input type="email" v-model="loginEmail" required placeholder=" " />
-            <label>이메일 주소 (임의로 입력)</label>
+            <label>이메일 주소</label>
           </div>
           <div class="input-group">
             <input type="password" v-model="loginApiKey" required placeholder=" " />
             <label>비밀번호 (TMDB API KEY)</label>
           </div>
 
-          <a href="#" class="forgot">도움이 필요하신가요?</a>
+          <div class="options-row">
+            <div class="checkbox-group">
+              <input type="checkbox" id="rememberMe" v-model="rememberMe" />
+              <label for="rememberMe">아이디 저장</label>
+            </div>
+            <a href="#" class="forgot">도움이 필요하신가요?</a>
+          </div>
+
           <button class="action-btn">로그인</button>
 
           <p class="mobile-text">
@@ -72,7 +84,7 @@
       <div class="overlay-container">
         <div class="overlay">
           <div class="overlay-panel overlay-left">
-            <h1>이미 가입하셨나요?</h1>
+            <h1>다시 오셨군요!</h1>
             <p>YJYFLIX의 방대한 콘텐츠가<br>당신을 기다리고 있습니다.</p>
             <button class="ghost-btn" @click="isSignUpMode = false">로그인하기</button>
           </div>
@@ -88,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMovieStore } from '../stores/movieStore'
 
@@ -97,31 +109,72 @@ const router = useRouter()
 
 const isSignUpMode = ref(false)
 
-// 변수 분리: 로그인용
+// 로그인 변수
 const loginEmail = ref('')
 const loginApiKey = ref('')
+const rememberMe = ref(false) // [추가]
 
-// 변수 분리: 회원가입용 (이름 제거됨)
+// 회원가입 변수
 const signupEmail = ref('')
 const signupApiKey = ref('')
 const signupApiKeyConfirm = ref('')
+const agreeTerms = ref(false) // [추가]
+
+// [추가] 이메일 유효성 검사 정규식
+const isValidEmail = (email: string) => {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return re.test(email);
+}
+
+// [추가] 컴포넌트 로드 시 저장된 아이디 불러오기
+onMounted(() => {
+  const savedId = localStorage.getItem('saved-email')
+  if (savedId) {
+    loginEmail.value = savedId
+    rememberMe.value = true
+  }
+})
 
 const handleLogin = () => {
-  if (loginEmail.value && loginApiKey.value) {
-    store.login(loginEmail.value, loginApiKey.value)
-    router.push('/')
-  } else {
-    alert('이메일과 API Key를 입력해주세요.')
+  if (!loginEmail.value || !loginApiKey.value) {
+    alert('이메일과 API Key를 모두 입력해주세요.')
+    return
   }
+
+  if (!isValidEmail(loginEmail.value)) {
+    alert('유효한 이메일 형식이 아닙니다.')
+    return
+  }
+
+  // 아이디 저장 로직
+  if (rememberMe.value) {
+    localStorage.setItem('saved-email', loginEmail.value)
+  } else {
+    localStorage.removeItem('saved-email')
+  }
+
+  store.login(loginEmail.value, loginApiKey.value)
+  alert('로그인에 성공했습니다!')
+  router.push('/')
 }
 
 const handleSignUp = () => {
-  if (signupApiKey.value !== signupApiKeyConfirm.value) {
-    alert('API Key가 일치하지 않습니다.')
+  if (!isValidEmail(signupEmail.value)) {
+    alert('유효한 이메일 형식이 아닙니다.')
     return
   }
-  // 실제로는 여기서 회원가입 API 호출
-  // [수정] 이름 관련 내용 제거
+
+  if (signupApiKey.value !== signupApiKeyConfirm.value) {
+    alert('비밀번호(API Key)가 일치하지 않습니다.')
+    return
+  }
+
+  // [필수] 약관 동의 체크
+  if (!agreeTerms.value) {
+    alert('서비스 이용 약관에 동의해야 가입할 수 있습니다.')
+    return
+  }
+
   alert('환영합니다! 회원가입이 완료되었습니다. 로그인해주세요.')
   isSignUpMode.value = false
 }
@@ -203,14 +256,13 @@ h1 { font-weight: 700; margin-bottom: 1.5rem; font-size: 2.2rem; }
   content: ''; flex: 1; height: 1px; background: #555; margin: 0 10px;
 }
 
-/* [겹침 해결] 입력창 스타일 */
+/* 입력창 스타일 */
 .input-group { position: relative; width: 100%; margin: 0.8rem 0; }
 
 .input-group input {
   background-color: #333333;
   border: none;
   border-bottom: 2px solid transparent;
-  /* [중요] 상단 패딩을 크게 주어 글자가 아래쪽에 찍히게 함 */
   padding: 1.5rem 1rem 0.5rem;
   width: 100%;
   border-radius: 4px;
@@ -237,29 +289,30 @@ h1 { font-weight: 700; margin-bottom: 1.5rem; font-size: 2.2rem; }
 }
 
 .input-group label {
-  position: absolute;
-  /* 기본 위치: 입력창 중앙 */
-  top: 50%; left: 1rem;
-  transform: translateY(-50%);
-  color: #a0a0a0;
-  font-size: 1rem;
-  pointer-events: none;
-  transition: all 0.3s ease;
+  position: absolute; top: 50%; left: 1rem; transform: translateY(-50%);
+  color: #a0a0a0; font-size: 1rem; pointer-events: none; transition: all 0.3s ease;
 }
 
-/* [중요] 플로팅 라벨 위치 조정 */
 .input-group input:focus ~ label,
 .input-group input:not(:placeholder-shown) ~ label {
-  /* 활성 시: 상단으로 이동하고 작아짐 */
-  top: 0.4rem;
-  left: 1rem;
-  font-size: 0.7rem;
-  font-weight: bold;
-  transform: translateY(0);
-  color: #ccc;
+  top: 0.4rem; left: 1rem; font-size: 0.7rem; font-weight: bold; transform: translateY(0); color: #ccc;
 }
 
-.forgot { color: #b3b3b3; font-size: 0.85rem; text-decoration: none; margin: 1rem 0; align-self: flex-end; }
+/* [NEW] 체크박스 및 옵션 행 스타일 */
+.options-row {
+  display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 10px;
+}
+.checkbox-group {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; margin: 5px 0;
+}
+.checkbox-group input[type="checkbox"] {
+  width: 16px; height: 16px; accent-color: #e50914; cursor: pointer;
+}
+.checkbox-group label {
+  font-size: 0.85rem; color: #b3b3b3; cursor: pointer;
+}
+
+.forgot { color: #b3b3b3; font-size: 0.85rem; text-decoration: none; }
 .forgot:hover { text-decoration: underline; }
 
 .action-btn {
