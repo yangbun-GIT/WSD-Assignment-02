@@ -4,14 +4,14 @@
 
     <div class="content">
       <h2>내가 찜한 콘텐츠</h2>
-      <div v-if="movies.length === 0" class="empty-state">
+      <div v-if="wishlist.length === 0" class="empty-state">
         <i class="fas fa-heart-broken empty-icon"></i>
         <p class="empty-msg">아직 찜한 콘텐츠가 없습니다.</p>
         <p class="empty-sub">마음에 드는 영화를 찾아 '좋아요'를 눌러보세요!</p>
         <router-link to="/search" class="go-search-btn">콘텐츠 찾아보기</router-link>
       </div>
       <div v-else class="grid">
-        <MovieCard v-for="movie in movies" :key="movie.id" :movie="movie" @click="openModal(movie)" />
+        <MovieCard v-for="movie in sortedMovies" :key="movie.id" :movie="movie" @click="openModal(movie)" />
       </div>
 
       <h2 class="history-title">최근 본 콘텐츠 (History)</h2>
@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useMovieStore } from '../stores/movieStore'
 import { storeToRefs } from 'pinia'
 import Navbar from '../components/Navbar.vue'
@@ -39,7 +39,7 @@ import MovieCard from '../components/MovieCard.vue'
 import MovieModal from '../components/MovieModal.vue'
 
 const store = useMovieStore()
-const { wishlist: movies, watchHistory } = storeToRefs(store)
+const { wishlist, wishlistSort, watchHistory } = storeToRefs(store)
 
 const showModal = ref(false)
 const selectedMovie = ref<any>(null)
@@ -48,6 +48,18 @@ const showTopBtn = ref(false)
 const openModal = (movie: any) => { selectedMovie.value = movie; showModal.value = true }
 const handleScroll = () => { showTopBtn.value = window.scrollY > 500 }
 const scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }) }
+
+// [NEW] 정렬 로직 구현
+const sortedMovies = computed(() => {
+  const list = [...wishlist.value] // 원본 보호를 위해 복사
+  if (wishlistSort.value === 'alpha') {
+    // 가나다순
+    return list.sort((a, b) => a.title.localeCompare(b.title))
+  } else {
+    // date (최신순 - 추가된 역순)
+    return list.reverse()
+  }
+})
 
 onMounted(() => window.addEventListener('scroll', handleScroll))
 onUnmounted(() => window.removeEventListener('scroll', handleScroll))
@@ -58,21 +70,14 @@ onUnmounted(() => window.removeEventListener('scroll', handleScroll))
 .content { padding: 100px 4% 40px; }
 h2 { margin-bottom: 20px; font-weight: bold; font-size: 1.5rem; }
 
-/* [수정] 텅 빈 상태 디자인 강화 */
-.empty-state {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 60px 0; text-align: center; color: #666;
-}
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0; text-align: center; color: #666; }
 .empty-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.5; }
 .empty-msg { font-size: 1.2rem; font-weight: bold; margin-bottom: 10px; }
 .empty-sub { font-size: 0.9rem; margin-bottom: 30px; }
-.go-search-btn {
-  padding: 10px 20px; border: 1px solid #666; border-radius: 4px;
-  transition: all 0.3s;
-}
+.go-search-btn { padding: 10px 20px; border: 1px solid #666; border-radius: 4px; transition: all 0.3s; }
 .go-search-btn:hover { background: #666; color: white; border-color: transparent; }
 
-/* 라이트 모드 텍스트 보정 */
+/* 라이트 모드 가독성 */
 :global(body.light-mode) h2 { color: #333 !important; }
 :global(body.light-mode) .empty-msg { color: #333; }
 :global(body.light-mode) .empty-sub { color: #666; }
@@ -86,4 +91,5 @@ h2 { margin-bottom: 20px; font-weight: bold; font-size: 1.5rem; }
 .top-btn:hover { background: #f40612; transform: translateY(-5px); }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+@media (max-width: 768px) { .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
 </style>
