@@ -137,8 +137,8 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
 .nav-right { gap: 15px; }
 
 /* 로고 */
-.logo-img { height: 35px; width: auto; display: block; } /* 로고 크기 최적화 */
-.mobile-logo { display: none; } /* 기본적으로 숨김 */
+.logo-img { height: 35px; width: auto; display: block; }
+.mobile-logo { display: none; }
 
 /* 메뉴 링크 */
 .links { display: flex; gap: 20px; }
@@ -149,7 +149,7 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
 .icon { font-size: 1.2rem; cursor: pointer; color: white; transition: 0.3s; }
 .pc-actions { display: flex; align-items: center; gap: 15px; }
 
-/* 검색창 */
+/* 검색창 (PC 기본) */
 .search-box { display: flex; align-items: center; gap: 5px; padding: 5px; border: 1px solid transparent; transition: 0.3s; }
 .search-box.active { border: 1px solid #fff; background: rgba(0,0,0,0.8); padding: 5px 10px; border-radius: 4px; }
 .search-box input { background: transparent; border: none; color: white; width: 0; outline: none; transition: width 0.3s; }
@@ -159,7 +159,7 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
 .nav-lang-selector { background: transparent; color: #fff; border: 1px solid #fff; border-radius: 4px; padding: 2px 5px; font-size: 0.8rem; cursor: pointer; }
 .nav-lang-selector option { background: #333; color: #fff; }
 
-/* 라이트 모드 가시성 패치 */
+/* 라이트 모드 가시성 패치 (PC) */
 .search-box.active.light-theme-box { background: #ffffff !important; border: 1px solid #ccc !important; }
 .search-box.light-theme-box input { color: #333333 !important; }
 .search-box.light-theme-box .icon { color: #333333 !important; }
@@ -191,7 +191,7 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
 
 /* 햄버거 메뉴 */
 .mobile-menu-btn { display: none; font-size: 1.4rem; color: white; cursor: pointer; margin-right: 10px; }
-:global(body.light-mode) .mobile-menu-btn { color: #141414 !important; } /* 라이트모드 햄버거 검정색 */
+:global(body.light-mode) .mobile-menu-btn { color: #141414 !important; }
 
 .mobile-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(0,0,0,0.5); z-index: 2000; }
 .mobile-menu-content { width: 70%; max-width: 280px; height: 100%; background: #141414; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
@@ -200,7 +200,9 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
 .mobile-links a.router-link-active { color: white; font-weight: bold; border-left: 3px solid #e50914; padding-left: 10px; }
 .mobile-menu-content.light-mobile .mobile-links a.router-link-active { color: #333; }
 
-/* [반응형 핵심] */
+/* =======================================================
+   [반응형 핵심 수정] 모바일 검색창 레이아웃 & 로고 겹침 해결
+   ======================================================= */
 @media (max-width: 768px) {
   /* PC 요소 숨기기 */
   .links, .pc-actions, .pc-logo { display: none !important; }
@@ -212,13 +214,47 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
     position: absolute; left: 50%; transform: translateX(-50%); /* 로고 중앙 정렬 */
   }
 
-  /* 모바일에서 프로필 메뉴 내 통합 기능 활성화 */
+  /* 모바일 프로필 메뉴 내 통합 기능 활성화 */
   .mobile-actions-menu { display: flex; }
 
-  /* 검색창 길이 조정 (공간 확보) */
-  .search-box.active input { width: 100px; }
+  .navbar { padding: 0 15px; }
 
-  .navbar { padding: 0 15px; } /* 패딩 축소 */
+  /* [수정] 모바일 검색창: 활성화 시 하단에 전체 너비로 펼쳐짐 */
+  .search-box.active {
+    /* 아이콘 주변 박스 스타일 제거 (아이콘만 보이게) */
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    position: static; /* 부모인 .navbar 기준으로 absolute 배치 허용 */
+  }
+
+  .search-box.active input {
+    display: block;
+    position: absolute;
+    top: 70px; /* 네비게이션 바 높이만큼 아래로 */
+    left: 0;
+    width: 100% !important; /* 전체 너비 */
+    height: 60px; /* 넉넉한 입력 공간 */
+    padding: 0 20px;
+    box-sizing: border-box;
+    font-size: 1rem;
+
+    /* 다크모드 기본 디자인 */
+    background: #141414;
+    color: white;
+    border-top: 1px solid #333;
+    border-bottom: 1px solid #333;
+    z-index: 999; /* 다른 요소 위로 */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+
+  /* 모바일 검색창 라이트 모드 대응 */
+  .search-box.active.light-theme-box input {
+    background: #ffffff !important;
+    color: #333333 !important;
+    border-top: 1px solid #ccc !important;
+    border-bottom: 1px solid #ccc !important;
+  }
 }
 
 .slide-fade-enter-active, .slide-fade-leave-active { transition: transform 0.3s ease; }
