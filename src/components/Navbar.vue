@@ -1,9 +1,12 @@
 <template>
   <nav class="navbar" :class="{ 'black-nav': isScrolled, 'hover-nav': isHovered }" @mouseenter="isHovered = true" @mouseleave="isHovered = false">
     <div class="left-section">
+      <i class="fas fa-bars mobile-menu-btn" @click="toggleMobileMenu"></i>
+
       <a class="logo-link" @click.prevent="handleLogoClick">
         <img src="../assets/yjy.png" alt="YJY PROJECT" class="logo-img" />
       </a>
+
       <div class="links">
         <router-link to="/">홈</router-link>
         <router-link to="/popular">인기 콘텐츠</router-link>
@@ -44,6 +47,23 @@
     </div>
 
     <SettingsModal v-if="showSettings" @close="showSettings = false" />
+
+    <transition name="slide-fade">
+      <div v-if="showMobileMenu" class="mobile-menu-overlay" @click.self="showMobileMenu = false">
+        <div class="mobile-menu-content" :class="{ 'light-mobile': theme === 'light' }">
+          <div class="mobile-header">
+            <span class="mobile-user">{{ email || 'Guest' }}님</span>
+            <i class="fas fa-times close-menu" @click="showMobileMenu = false"></i>
+          </div>
+          <div class="mobile-links">
+            <router-link to="/" @click="showMobileMenu = false">홈</router-link>
+            <router-link to="/popular" @click="showMobileMenu = false">인기 콘텐츠</router-link>
+            <router-link to="/wishlist" @click="showMobileMenu = false">내가 찜한 리스트</router-link>
+            <router-link to="/search" @click="showMobileMenu = false">찾아보기</router-link>
+          </div>
+        </div>
+      </div>
+    </transition>
   </nav>
 </template>
 
@@ -61,6 +81,7 @@ const isScrolled = ref(false)
 const isHovered = ref(false)
 const showSearch = ref(false)
 const showSettings = ref(false)
+const showMobileMenu = ref(false) // [NEW] 모바일 메뉴 상태
 const searchQuery = ref('')
 const searchInput = ref<HTMLInputElement | null>(null)
 const searchContainer = ref<HTMLElement | null>(null)
@@ -74,6 +95,7 @@ const handleLogoClick = () => { if (route.path === '/') window.scrollTo({ top: 0
 const changeLang = () => { store.setLanguage(language.value) }
 const toggleSearch = () => { showSearch.value = !showSearch.value; if (showSearch.value) nextTick(() => searchInput.value?.focus()) }
 const goToSearch = () => { if (searchQuery.value.trim()) router.push({ path: '/search', query: { q: searchQuery.value } }) }
+const toggleMobileMenu = () => { showMobileMenu.value = !showMobileMenu.value } // [NEW] 토글 함수
 
 onMounted(() => { window.addEventListener('scroll', handleScroll); window.addEventListener('click', handleClickOutside) })
 onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.removeEventListener('click', handleClickOutside) })
@@ -99,16 +121,13 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
 .setting-btn { margin-right: 5px; transition: transform 0.3s; }
 .setting-btn:hover { color: #e50914; transform: rotate(90deg); }
 
-/* 언어 선택기 (기본 다크) */
 .nav-lang-selector { background: transparent; color: #fff; border: 1px solid #fff; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; cursor: pointer; margin-right: 10px; outline: none; }
 .nav-lang-selector option { background: #333; color: #fff; }
 
-/* 검색창 (기본 다크) */
 .search-box { display: flex; align-items: center; gap: 10px; padding: 5px; border: 1px solid transparent; }
 .search-box.active { border: 1px solid #fff; background: rgba(0,0,0,0.8); padding: 5px 10px; }
 .search-box input { background: transparent; border: none; color: white; width: 200px; outline: none; }
 
-/* 프로필 드롭다운 */
 .profile-menu { position: relative; display: flex; align-items: center; gap: 5px; cursor: pointer; padding: 10px 0; }
 .profile-icon img { width: 32px; height: 32px; border-radius: 4px; }
 .dropdown-arrow { font-size: 0.8rem; transition: transform 0.2s; }
@@ -121,38 +140,44 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
 .drop-link, .dropdown button { color: white; text-decoration: none; font-size: 0.9rem; background: none; border: none; text-align: left; cursor: pointer; padding: 0; }
 .drop-link:hover, .dropdown button:hover { text-decoration: underline; }
 
-/* ----------------------------------------------------
-   [핵심 수정] 라이트 모드 강제 적용 스타일
-   ---------------------------------------------------- */
-
-/* 1. 검색창 라이트 모드 (흰 배경 + 검은 글씨) */
-.search-box.active.light-theme-box {
-  background: #ffffff !important;
-  border: 1px solid #ccc !important;
-}
-.search-box.light-theme-box input {
-  color: #333333 !important;
-}
-.search-box.light-theme-box .icon {
-  color: #333333 !important;
-}
-
-/* 2. 언어 선택기 라이트 모드 (흰 배경 + 검은 글씨) */
-.nav-lang-selector.light-theme-select {
-  color: #333333 !important;
-  border-color: #ccc !important;
-  background-color: #ffffff !important;
-}
-.nav-lang-selector.light-theme-select option {
-  background-color: #ffffff !important;
-  color: #333333 !important;
-}
-
-/* 3. 드롭다운 라이트 모드 (기존 global 방식 유지하되 명시적으로) */
+/* 라이트 모드 가시성 패치 */
+.search-box.active.light-theme-box { background: #ffffff !important; border: 1px solid #ccc !important; }
+.search-box.light-theme-box input { color: #333333 !important; }
+.search-box.light-theme-box .icon { color: #333333 !important; }
+.nav-lang-selector.light-theme-select { color: #333333 !important; border-color: #ccc !important; background-color: #ffffff !important; }
+.nav-lang-selector.light-theme-select option { background-color: #ffffff !important; color: #333333 !important; }
 :global(body.light-mode) .dropdown-content { background-color: #ffffff; border-color: #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 :global(body.light-mode) .dropdown span { color: #666; }
 :global(body.light-mode) .dropdown hr { border-color: #eee; }
 :global(body.light-mode) .drop-link, :global(body.light-mode) .dropdown button { color: #333; }
 
-@media (max-width: 768px) { .links { display: none; } }
+/* [NEW] 모바일 메뉴 스타일 (반응형 핵심) */
+.mobile-menu-btn { display: none; font-size: 1.5rem; color: white; cursor: pointer; margin-right: 15px; }
+:global(body.light-mode) .mobile-menu-btn { color: #333; }
+
+.mobile-menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(0,0,0,0.5); z-index: 2000; }
+.mobile-menu-content { width: 70%; max-width: 300px; height: 100%; background: #141414; padding: 20px; display: flex; flex-direction: column; gap: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
+/* 모바일 메뉴 라이트 모드 지원 */
+.mobile-menu-content.light-mobile { background: #fff; color: #333; }
+
+.mobile-header { display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; font-weight: bold; padding-bottom: 20px; border-bottom: 1px solid #333; }
+.mobile-menu-content.light-mobile .mobile-header { border-bottom-color: #eee; }
+
+.mobile-links { display: flex; flex-direction: column; gap: 20px; }
+.mobile-links a { color: #ccc; font-size: 1rem; text-decoration: none; font-weight: bold; }
+.mobile-menu-content.light-mobile .mobile-links a { color: #333; }
+
+.mobile-links a.router-link-active { color: #e50914; }
+.close-menu { cursor: pointer; font-size: 1.5rem; }
+
+/* [중요] 반응형 미디어 쿼리 */
+@media (max-width: 768px) {
+  .links { display: none; } /* 기존 PC 메뉴 숨김 */
+  .mobile-menu-btn { display: block; } /* 햄버거 버튼 표시 */
+  .left-section { gap: 10px; }
+  .logo-img { height: 40px; }
+}
+
+.slide-fade-enter-active, .slide-fade-leave-active { transition: transform 0.3s ease, opacity 0.3s ease; }
+.slide-fade-enter-from, .slide-fade-leave-to { transform: translateX(-100%); opacity: 0; }
 </style>

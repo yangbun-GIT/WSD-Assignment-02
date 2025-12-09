@@ -29,12 +29,12 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
 import MovieCard from './MovieCard.vue'
-import { useMovieStore } from '../stores/movieStore' // [필수] 스토어 가져오기
+import { useMovieStore } from '../stores/movieStore'
 
 defineProps<{ title: string; movies: any[] }>()
 defineEmits(['movie-click'])
 
-const store = useMovieStore() // [필수] 스토어 사용
+const store = useMovieStore()
 const slider = ref<HTMLElement | null>(null)
 const showControls = ref(false)
 const showLeft = ref(false)
@@ -74,6 +74,8 @@ onMounted(() => { nextTick(() => checkScroll()) })
 .slider {
   display: flex; gap: 10px; overflow-x: auto; padding: 10px 0;
   scroll-behavior: smooth; scrollbar-width: none;
+  /* [필수 추가] iOS 모바일 부드러운 스크롤 */
+  -webkit-overflow-scrolling: touch;
 }
 .slider::-webkit-scrollbar { display: none; }
 
