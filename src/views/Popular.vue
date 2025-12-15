@@ -32,7 +32,7 @@
       </div>
 
       <div v-if="viewMode === 'infinite'" ref="observerElement" class="observer-sentinel">
-        <div v-if="isLoading && movies.length > 0" class="loading-more">
+        <div v-if="isLoadingMore" class="loading-more">
           <i class="fas fa-spinner fa-spin"></i> 콘텐츠를 불러오는 중...
         </div>
       </div>
@@ -48,7 +48,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, onUnmounted } from 'vue'
 import tmdb from '../api/tmdb'
-import { useMovieStore } from '../stores/movieStore' // Store import
+import { useMovieStore } from '../stores/movieStore'
 import { storeToRefs } from 'pinia'
 import Navbar from '../components/Navbar.vue'
 import MovieCard from '../components/MovieCard.vue'
@@ -56,14 +56,13 @@ import MovieModal from '../components/MovieModal.vue'
 import SkeletonCard from '../components/SkeletonCard.vue'
 
 const store = useMovieStore()
-// [수정] Store의 viewMode를 반응형으로 가져옴
 const { viewMode } = storeToRefs(store)
 
 const movies = ref<any[]>([])
 const currentPage = ref(1)
 const totalPages = ref(1)
-// const viewMode = ref... (제거됨) -> Store 사용
-const isLoading = ref(false)
+const isLoading = ref(false)     // 초기 로딩용
+const isLoadingMore = ref(false) // 추가 로딩용
 const observerElement = ref<HTMLElement | null>(null)
 const showTopBtn = ref(false)
 const showModal = ref(false)
@@ -73,28 +72,69 @@ const openModal = (movie: any) => { selectedMovie.value = movie; showModal.value
 const handleScroll = () => { showTopBtn.value = window.scrollY > 500 }
 const scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
+// 데이터 가져오기 함수
 const fetchMovies = async (page: number, isAppend: boolean) => {
-  if (isLoading.value) return
-  isLoading.value = true
+  if (isAppend) isLoadingMore.value = true
+  else isLoading.value = true
+
   try {
     const res = await tmdb.get('/movie/popular', { params: { page: page } })
     totalPages.value = res.data.total_pages > 500 ? 500 : res.data.total_pages
+
     if (isAppend) {
+      // 중복 제거 후 추가
       const newMovies = res.data.results.filter((newM: any) => !movies.value.some((oldM: any) => oldM.id === newM.id))
       movies.value = [...movies.value, ...newMovies]
     } else {
       movies.value = res.data.results
     }
-  } catch (error) { console.error(error) } finally { isLoading.value = false }
+  } catch (error) {
+    console.error(error)
+  } finally {
+    isLoading.value = false
+    isLoadingMore.value = false
+  }
 }
 
-// [수정] 모드 변경 시 Store 함수 호출
-const handleChangeMode = (mode: 'table' | 'infinite') => {
-  store.setViewMode(mode) // Store에 저장
+// 모드 변경 핸들러
+const handleChangeMode = async (mode: 'table' | 'infinite') => {
+  store.setViewMode(mode)
   currentPage.value = 1
   movies.value = []
   window.scrollTo(0, 0)
-  fetchMovies(1, false)
+
+  if (mode === 'infinite') {
+    // [핵심] 무한 스크롤 모드면 처음부터 3페이지(60개)를 로드하여 4K 화면을 채움
+    await fetchInitialBatch()
+  } else {
+    // 테이블 모드면 1페이지만 로드
+    fetchMovies(1, false)
+  }
+}
+
+// [핵심 함수] 초기 3페이지(60개) 한번에 로드
+const fetchInitialBatch = async () => {
+  isLoading.value = true
+  // 병렬로 요청을 보내서 속도 최적화
+  const p1 = tmdb.get('/movie/popular', { params: { page: 1 } })
+  const p2 = tmdb.get('/movie/popular', { params: { page: 2 } })
+  const p3 = tmdb.get('/movie/popular', { params: { page: 3 } })
+
+  try {
+    const [res1, res2, res3] = await Promise.all([p1, p2, p3])
+    // 3개 페이지 합치기
+    const allResults = [...res1.data.results, ...res2.data.results, ...res3.data.results]
+    // 중복 제거 (혹시 모를 API 중복 대비)
+    const uniqueMovies = allResults.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i)
+
+    movies.value = uniqueMovies
+    currentPage.value = 3 // 3페이지까지 로드했으므로 설정
+    totalPages.value = res1.data.total_pages
+  } catch (e) {
+    console.error(e)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const changePage = (page: number) => {
@@ -105,11 +145,13 @@ const changePage = (page: number) => {
   fetchMovies(page, false)
 }
 
+// Intersection Observer (무한 스크롤)
 let observer: IntersectionObserver | null = null
 const initObserver = () => {
   if (observer) observer.disconnect()
   observer = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting && !isLoading.value) {
+    // 로딩 중이 아니고 요소가 보이면 다음 페이지 로드
+    if (entries[0].isIntersecting && !isLoading.value && !isLoadingMore.value) {
       currentPage.value++
       fetchMovies(currentPage.value, true)
     }
@@ -117,16 +159,21 @@ const initObserver = () => {
   if (observerElement.value) observer.observe(observerElement.value)
 }
 
-// viewMode는 이제 Store 값이므로 그대로 감지 가능
 watch(() => [viewMode.value, observerElement.value], () => {
   if (viewMode.value === 'infinite' && observerElement.value) { initObserver() }
   else { if (observer) observer.disconnect() }
 })
 
-onMounted(() => {
-  fetchMovies(1, false)
+onMounted(async () => {
+  // [핵심] 초기 진입 시 모드에 따라 데이터 로드 양 결정
+  if (viewMode.value === 'infinite') {
+    await fetchInitialBatch() // 60개 로드
+  } else {
+    await fetchMovies(1, false) // 20개 로드
+  }
   window.addEventListener('scroll', handleScroll)
 })
+
 onUnmounted(() => {
   if (observer) observer.disconnect()
   window.removeEventListener('scroll', handleScroll)

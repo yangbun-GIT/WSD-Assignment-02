@@ -45,7 +45,6 @@
           <div class="dropdown-content" :class="{ 'light-mobile': theme === 'light' }">
             <span class="user-info">{{ email || 'Guest' }}님</span>
             <hr>
-
             <div class="mobile-actions-menu">
               <div class="menu-item" @click="store.toggleTheme">
                 <i class="fas" :class="theme === 'dark' ? 'fa-sun' : 'fa-moon'"></i>
@@ -63,7 +62,6 @@
               </div>
               <hr>
             </div>
-
             <router-link to="/wishlist" class="drop-link"><i class="fas fa-heart"></i> 찜한 리스트</router-link>
             <button @click="handleLogout" class="logout-btn">로그아웃</button>
           </div>
@@ -127,28 +125,15 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
 </script>
 
 <style>
-body, html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  overflow-x: hidden; /* 가로 스크롤 강제 숨김 */
-}
+html, body { margin: 0; padding: 0; width: 100%; overflow-x: hidden; }
 </style>
 
 <style scoped>
 /* 레이아웃 구조 */
 .navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 4%; /* 업로드해주신 원본 패딩 유지 */
-  position: fixed;
-  top: 0;
-  left: 0; /* 위치 명시 */
-  width: 100%;
-  z-index: 1000;
-  height: 70px;
-  box-sizing: border-box; /* 패딩 포함 크기 계산 */
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 4%; position: fixed; top: 0; left: 0; width: 100%; max-width: 100vw;
+  z-index: 1000; height: 70px; box-sizing: border-box;
   transition: background-color 0.4s ease;
   background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
 }
@@ -159,30 +144,29 @@ body, html {
 .nav-left { gap: 20px; }
 .nav-right { gap: 15px; }
 
-/* 로고 */
-.logo-img { height: 35px; width: auto; display: block; }
+/* [수정] 로고 크기 확대 (35px -> 45px) */
+.logo-img { height: 50px; width: auto; display: block; }
 .mobile-logo { display: none; }
 
-/* 메뉴 링크 */
-.links { display: flex; gap: 20px; }
-.links a { color: #e5e5e5; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+/* [수정] 메뉴 링크 폰트 확대 (0.9rem -> 1.15rem) */
+.links { display: flex; gap: 25px; } /* 간격도 조금 넓힘 */
+.links a { color: #e5e5e5; text-decoration: none; font-size: 1.1rem; transition: 0.3s; }
 .links a:hover, .links a.router-link-active { color: #fff; font-weight: bold; }
 
 /* 아이콘 버튼들 */
-.icon { font-size: 1.2rem; cursor: pointer; color: white; transition: 0.3s; }
+.icon { font-size: 1.3rem; cursor: pointer; color: white; transition: 0.3s; }
 .pc-actions { display: flex; align-items: center; gap: 15px; }
 
-/* 검색창 (PC 기본) */
+/* 검색창 */
 .search-box { display: flex; align-items: center; gap: 5px; padding: 5px; border: 1px solid transparent; transition: 0.3s; }
 .search-box.active { border: 1px solid #fff; background: rgba(0,0,0,0.8); padding: 5px 10px; border-radius: 4px; }
 .search-box input { background: transparent; border: none; color: white; width: 0; outline: none; transition: width 0.3s; }
 .search-box.active input { width: 150px; }
 
-/* 언어 선택기 */
-.nav-lang-selector { background: transparent; color: #fff; border: 1px solid #fff; border-radius: 4px; padding: 2px 5px; font-size: 0.8rem; cursor: pointer; }
+.nav-lang-selector { background: transparent; color: #fff; border: 1px solid #fff; border-radius: 4px; padding: 2px 5px; font-size: 0.9rem; cursor: pointer; }
 .nav-lang-selector option { background: #333; color: #fff; }
 
-/* 라이트 모드 가시성 패치 (PC) */
+/* 테마 관련 */
 .search-box.active.light-theme-box { background: #ffffff !important; border: 1px solid #ccc !important; }
 .search-box.light-theme-box input { color: #333333 !important; }
 .search-box.light-theme-box .icon { color: #333333 !important; }
@@ -191,7 +175,7 @@ body, html {
 
 /* 프로필 메뉴 */
 .profile-menu { position: relative; display: flex; align-items: center; gap: 5px; cursor: pointer; }
-.profile-icon img { width: 30px; height: 30px; border-radius: 4px; }
+.profile-icon img { width: 32px; height: 32px; border-radius: 4px; }
 .dropdown-arrow { font-size: 0.7rem; color: white; }
 .dropdown { position: absolute; top: 100%; right: 0; padding-top: 10px; display: none; }
 .profile-menu:hover .dropdown { display: block; }
@@ -204,7 +188,6 @@ body, html {
 .dropdown-content.light-mobile .drop-link, .dropdown-content.light-mobile .logout-btn { color: #333; }
 .dropdown-content.light-mobile .drop-link:hover { color: #e50914; }
 
-/* 모바일 통합 메뉴 (Dropdown 내부) */
 .mobile-actions-menu { display: none; flex-direction: column; gap: 10px; }
 .menu-item { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; cursor: pointer; color: #ccc; }
 .menu-item:hover { color: white; }
@@ -212,7 +195,6 @@ body, html {
 .dropdown-content.light-mobile .menu-item:hover { color: #e50914; }
 .mobile-lang-select { background: transparent; color: inherit; border: 1px solid #555; border-radius: 4px; padding: 2px; font-size: 0.8rem; }
 
-/* 햄버거 메뉴 */
 .mobile-menu-btn { display: none; font-size: 1.4rem; color: white; cursor: pointer; margin-right: 10px; }
 :global(body.light-mode) .mobile-menu-btn { color: #141414 !important; }
 
@@ -223,57 +205,25 @@ body, html {
 .mobile-links a.router-link-active { color: white; font-weight: bold; border-left: 3px solid #e50914; padding-left: 10px; }
 .mobile-menu-content.light-mobile .mobile-links a.router-link-active { color: #333; }
 
-/* =======================================================
-   모바일 반응형 스타일
-   ======================================================= */
 @media (max-width: 768px) {
-  /* PC 요소 숨기기 */
   .links, .pc-actions, .pc-logo { display: none !important; }
-
-  /* 모바일 요소 보이기 */
   .mobile-menu-btn { display: block; }
-  .mobile-logo {
-    display: block;
-    position: absolute; left: 50%; transform: translateX(-50%); /* 로고 중앙 정렬 */
-  }
+  .mobile-logo { display: block; position: absolute; left: 50%; transform: translateX(-50%); }
 
-  /* 모바일 프로필 메뉴 내 통합 기능 활성화 */
+  /* 모바일 로고는 기존 크기 유지 (너무 크면 네비바 깨짐) */
+  .logo-img { height: 35px; }
+
   .mobile-actions-menu { display: flex; }
+  .navbar { padding: 0 4%; }
 
-  .navbar { padding: 0 15px; } /* 모바일 패딩 약간 축소 */
-
-  /* 모바일 검색창: 활성화 시 하단에 전체 너비로 펼쳐짐 */
-  .search-box.active {
-    border: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    position: static;
-  }
-
+  .search-box.active { border: none !important; background: transparent !important; padding: 0 !important; position: static; }
   .search-box.active input {
-    display: block;
-    position: absolute;
-    top: 70px;
-    left: 0;
-    width: 100% !important;
-    height: 60px;
-    padding: 0 20px;
-    box-sizing: border-box;
-    font-size: 1rem;
-    background: #141414;
-    color: white;
-    border-top: 1px solid #333;
-    border-bottom: 1px solid #333;
-    z-index: 999;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    display: block; position: absolute; top: 70px; left: 0; width: 100% !important; height: 60px;
+    padding: 0 20px; box-sizing: border-box; font-size: 1rem;
+    background: #141414; color: white; border-top: 1px solid #333; border-bottom: 1px solid #333;
+    z-index: 999; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
-
-  .search-box.active.light-theme-box input {
-    background: #ffffff !important;
-    color: #333333 !important;
-    border-top: 1px solid #ccc !important;
-    border-bottom: 1px solid #ccc !important;
-  }
+  .search-box.active.light-theme-box input { background: #ffffff !important; color: #333333 !important; border-top: 1px solid #ccc !important; border-bottom: 1px solid #ccc !important; }
 }
 
 .slide-fade-enter-active, .slide-fade-leave-active { transition: transform 0.3s ease; }
