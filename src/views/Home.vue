@@ -71,7 +71,6 @@ const comedyMovies = ref([])
 const showModal = ref(false)
 const selectedMovie = ref<any>(null)
 
-// [점검 완료] center top은 데스크탑에서도 인물 머리 잘림 방지에 유리함
 const bannerStyle = computed(() => {
   if (!featuredMovie.value) return {}
   const path = featuredMovie.value.backdrop_path || featuredMovie.value.poster_path
@@ -111,7 +110,6 @@ onUnmounted(() => { clearInterval(bannerInterval) })
 
 .hero-wrapper {
   position: relative;
-  /* [데스크탑 안전] 기본 높이 85vh 유지 */
   height: 85vh;
   min-height: 600px;
   overflow: hidden; background-color: #000;
@@ -182,10 +180,19 @@ onUnmounted(() => { clearInterval(bannerInterval) })
 
 .hero-fade-top { position: absolute; top: 0; width: 100%; height: 150px; background-image: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%); z-index: 1; }
 .hero-fade-bottom { position: absolute; bottom: 0; width: 100%; height: 20vh; background-image: linear-gradient(180deg, transparent, rgba(0,0,0,0.9)); z-index: 1; }
-.main-content { position: relative; z-index: 20; margin-top: -10vh; padding-bottom: 40px; }
+
+/* [수정 핵심] 메인 콘텐츠와 히어로 배너 겹침 제거 */
+.main-content {
+  position: relative;
+  z-index: 20;
+  /* 기존 margin-top: -10vh 를 0으로 변경하여 아래로 내림 */
+  margin-top: 0;
+  padding-bottom: 40px;
+  /* 라이트 모드 가시성을 위해 패딩 추가 */
+  padding-top: 20px;
+}
 .hero-skeleton { height: 85vh; width: 100%; background: #2f2f2f; }
 
-/* [반응형 핵심] 모바일에서만 적용되는 스타일 */
 @media (max-width: 1024px) {
   .hero-wrapper { height: 70vh; min-height: 500px; }
   .hero-title { font-size: 2.8rem; }
@@ -194,7 +201,6 @@ onUnmounted(() => { clearInterval(bannerInterval) })
 
 @media (max-width: 768px) {
   .hero-wrapper, .hero-banner, .hero-skeleton {
-    /* 모바일 높이 조정 */
     height: 65vh;
     min-height: 450px;
   }
@@ -225,6 +231,7 @@ onUnmounted(() => { clearInterval(bannerInterval) })
     padding: 0.6rem 1.5rem;
     font-size: 0.95rem;
   }
+  /* 모바일에서도 겹치지 않도록 마진 제거 유지 */
   .main-content { margin-top: 0; padding-top: 20px; }
 }
 
