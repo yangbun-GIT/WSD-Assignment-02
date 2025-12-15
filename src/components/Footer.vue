@@ -23,11 +23,10 @@
   padding: 40px 20px;
   text-align: center;
   border-top: 1px solid #333;
-  margin-top: auto; /* 내용이 짧아도 바닥에 붙도록 설정 */
+  margin-top: auto;
   font-size: 0.9rem;
   position: relative;
   z-index: 10;
-  box-sizing: border-box;
 }
 
 .footer-content {
@@ -37,7 +36,7 @@
 }
 
 .warning-text {
-  color: #e50914; /* 경고 색상으로 봇에게 강조 */
+  color: #e50914;
   margin-bottom: 10px;
 }
 
@@ -47,10 +46,19 @@
   opacity: 0.7;
 }
 
-/* 라이트 모드 대응 */
+/* [수정] 라이트 모드 가시성 완벽 해결 */
 :global(body.light-mode) .app-footer {
-  background-color: #f5f5f5;
-  color: #333;
-  border-top: 1px solid #ddd;
+  background-color: #ffffff !important;
+  color: #111111 !important;
+  border-top: 1px solid #e0e0e0;
+}
+
+:global(body.light-mode) .app-footer p {
+  color: #111111 !important;
+  text-shadow: none !important;
+}
+
+:global(body.light-mode) .copyright {
+  color: #555555 !important;
 }
 </style>
