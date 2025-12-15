@@ -1,50 +1,69 @@
 <template>
-  <div v-if="!isHidden" class="movie-card" :class="{ 'liked-border': isLiked }" @click="$emit('click', movie)">
-    <img v-if="movie.poster_path" :src="posterUrl" :alt="movie.title" class="poster" />
-    <div v-else class="no-poster"><span>이미지 준비중</span></div>
-
-    <div class="overlay">
-      <p class="title">{{ movie.title }}</p>
-      <p v-if="showYear" class="release-year">{{ getYear(movie.release_date) }}</p>
-    </div>
-
-    <div class="heart-btn" @click.stop="handleToggleLike">
-      <i :class="isLiked ? 'fas fa-heart' : 'far fa-heart'"></i>
+  <div
+      class="movie-card"
+      @click="$emit('click')"
+      @mouseenter="isHovered = true"
+      @mouseleave="isHovered = false"
+  >
+    <div class="poster-wrapper">
+      <img
+          :src="posterUrl"
+          :alt="movie.title || movie.name"
+          class="movie-poster"
+          loading="lazy"
+      >
+      <div class="poster-overlay" :class="{ 'show-overlay': isHovered }">
+        <button class="like-btn" @click.stop="toggleLike">
+          <i class="fas fa-heart" :class="{ 'liked': isLiked }"></i>
+        </button>
+        <div class="movie-info">
+          <h3 class="movie-title">{{ movie.title || movie.name }}</h3>
+          <div class="movie-meta">
+            <span class="rating"><i class="fas fa-star"></i> {{ movie.vote_average?.toFixed(1) }}</span>
+          </div>
+          <div class="genres">
+            <span v-for="(genre, index) in movieGenres.slice(0, 2)" :key="genre.id">
+              {{ genre.name }}{{ index < movieGenres.slice(0, 2).length - 1 ? ' · ' : '' }}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useMovieStore } from '../stores/movieStore'
-import { storeToRefs } from 'pinia'
+import tmdb from '../api/tmdb'
 
 const props = defineProps<{ movie: any }>()
 defineEmits(['click'])
 
 const store = useMovieStore()
-const { showYear, hideHorror, lowDataMode, includeAdult } = storeToRefs(store)
-
-const isLiked = computed(() => store.isLiked(props.movie.id))
+const isHovered = ref(false)
+const allGenres = ref<any[]>([])
 
 const posterUrl = computed(() => {
-  const size = lowDataMode.value ? 'w200' : 'w500'
-  return `https://image.tmdb.org/t/p/${size}${props.movie.poster_path}`
+  return props.movie.poster_path
+      ? `https://image.tmdb.org/t/p/w342${props.movie.poster_path}`
+      : 'https://via.placeholder.com/342x513?text=No+Poster'
 })
 
-// [기능] 필터링 로직 (공포 차단 + 성인 차단)
-const isHidden = computed(() => {
-  // 1. 공포 영화 차단 (ID 27)
-  if (hideHorror.value && props.movie.genre_ids?.includes(27)) return true
+const isLiked = computed(() => store.wishlist.some(m => m.id === props.movie.id))
+const toggleLike = () => store.toggleWishlist(props.movie)
 
-  // 2. 성인 영화 차단 (설정이 꺼져있는데 영화가 성인물인 경우)
-  if (!includeAdult.value && props.movie.adult === true) return true
-
-  return false
+const movieGenres = computed(() => {
+  if (!props.movie.genre_ids || allGenres.value.length === 0) return []
+  return allGenres.value.filter(g => props.movie.genre_ids.includes(g.id))
 })
 
-const getYear = (date: string) => date ? date.split('-')[0] : ''
-const handleToggleLike = () => store.toggleLike(props.movie)
+onMounted(async () => {
+  try {
+    const res = await tmdb.get('/genre/movie/list')
+    allGenres.value = res.data.genres
+  } catch (e) { console.error('Failed to fetch genres', e) }
+})
 </script>
 
 <style scoped>
@@ -53,49 +72,69 @@ const handleToggleLike = () => store.toggleLike(props.movie)
   cursor: pointer;
   border-radius: 6px;
   overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+  background-color: #2f2f2f;
+
+  /* [데스크탑 안전] 모든 해상도에서 포스터 비율을 2:3으로 고정하여 찌그러짐 방지 */
   aspect-ratio: 2 / 3;
   width: 100%;
-  background-color: #222;
-
-  /* [성능 최적화] 브라우저 렌더링 힌트 제공 (GPU 가속 유도) */
-  will-change: transform, box-shadow;
-
-  /* [애니메이션] 부드러운 확대/축소 효과 (cubic-bezier 적용) */
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s ease;
 }
 
-/* 호버 시 확대 및 그림자 (style.css의 no-hover 설정이 없을 때만 동작) */
-.movie-card:hover {
-  transform: scale(1.05);
-  z-index: 10;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.7);
+.poster-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
 }
 
-.liked-border { border: 2px solid #e50914; }
-
-.poster { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-.no-poster { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #333; color: #888; font-size: 0.9rem; }
-
-.overlay {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  background: linear-gradient(to top, black, transparent);
-  padding: 20px 10px 10px;
-  opacity: 0;
-  transition: opacity 0.3s ease; /* 오버레이 페이드 효과 */
+.movie-poster {
+  width: 100%;
+  height: 100%;
+  /* [데스크탑 안전] 비율 고정 시 빈 공간 없이 꽉 채우기 */
+  object-fit: cover;
+  display: block;
 }
 
-.movie-card:hover .overlay { opacity: 1; }
-
-.title { font-size: 0.9rem; text-align: center; color: white; margin: 0; }
-.release-year { font-size: 0.8rem; color: #ccc; text-align: center; margin-top: 4px; }
-
-.heart-btn {
-  position: absolute; top: 10px; right: 10px; color: white; font-size: 1.5rem;
-  cursor: pointer; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.8));
-  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 통통 튀는 효과 */
-  z-index: 15;
+.poster-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+  opacity: 0; transition: opacity 0.3s ease;
+  display: flex; flex-direction: column; justify-content: flex-end; padding: 15px;
 }
-.heart-btn:hover { transform: scale(1.2); }
-.heart-btn i.fas { color: #e50914; }
+
+@media (hover: hover) {
+  .movie-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5), 0 6px 6px rgba(0,0,0,0.3);
+    z-index: 10;
+  }
+  .show-overlay { opacity: 1; }
+}
+
+.like-btn {
+  position: absolute; top: 10px; right: 10px;
+  background: rgba(0,0,0,0.5); border: none; color: white;
+  font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 50%;
+  transition: color 0.2s, background-color 0.2s, transform 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+}
+.like-btn:hover { color: #e50914; background: rgba(255,255,255,0.2); transform: scale(1.1); }
+.liked { color: #e50914; }
+
+.movie-info { color: white; }
+.movie-title { font-size: 1rem; font-weight: bold; margin: 0 0 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.movie-meta { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; margin-bottom: 5px; }
+.rating { color: #46d369; font-weight: bold; }
+.genres { font-size: 0.8rem; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 모바일 전용 스타일 */
+@media (max-width: 768px) {
+  .movie-card { border-radius: 4px; }
+  .poster-overlay { padding: 10px; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); }
+  .like-btn { top: 5px; right: 5px; padding: 6px; font-size: 1rem; width: 30px; height: 30px; }
+  .movie-title { font-size: 0.9rem; }
+  .movie-meta { font-size: 0.8rem; }
+  .genres { font-size: 0.75rem; }
+  .movie-card:hover { transform: none; box-shadow: none; }
+}
 </style>
