@@ -71,6 +71,7 @@ const comedyMovies = ref([])
 const showModal = ref(false)
 const selectedMovie = ref<any>(null)
 
+// [수정] 스크립트에서 이미지를 바꾸지 않음. 기존 로직 그대로 유지.
 const bannerStyle = computed(() => {
   if (!featuredMovie.value) return {}
   const path = featuredMovie.value.backdrop_path || featuredMovie.value.poster_path
@@ -83,11 +84,7 @@ const bannerStyle = computed(() => {
 })
 
 const openModal = (movie: any) => { selectedMovie.value = movie; showModal.value = true }
-
-const truncate = (str: string, n: number) => {
-  if (!str) return '';
-  return str.length > n ? str.substr(0, n) : str;
-}
+const truncate = (str: string, n: number) => (str && str.length > n) ? str.substr(0, n) : str || ''
 
 const updateBanner = () => { if (popularMovies.value.length > 0) featuredMovie.value = popularMovies.value[bannerIndex.value] }
 const nextBanner = () => { bannerIndex.value = (bannerIndex.value + 1) % popularMovies.value.length; updateBanner(); resetTimer() }
@@ -102,6 +99,7 @@ onMounted(async () => {
   popularMovies.value = pop.data.results; nowPlayingMovies.value = now.data.results; topRatedMovies.value = top.data.results; actionMovies.value = act.data.results; comedyMovies.value = com.data.results
   updateBanner(); resetTimer()
 })
+
 onUnmounted(() => { clearInterval(bannerInterval) })
 </script>
 
@@ -110,6 +108,7 @@ onUnmounted(() => { clearInterval(bannerInterval) })
 
 .hero-wrapper {
   position: relative;
+  /* [PC] 기본 높이 유지 */
   height: 85vh;
   min-height: 600px;
   overflow: hidden; background-color: #000;
@@ -128,34 +127,15 @@ onUnmounted(() => { clearInterval(bannerInterval) })
   padding-top: 100px;
   z-index: 10;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  text-align: left;
+  display: flex; flex-direction: column; justify-content: center; align-items: flex-start; text-align: left;
 }
 
 .hero-title { font-size: 3.5rem; font-weight: 800; margin-bottom: 1rem; color: white !important; line-height: 1.2; }
-
 .hero-overview {
-  width: 100%;
-  max-width: 600px;
-  line-height: 1.5;
-  font-size: 1.2rem;
-  margin-bottom: 1.5rem;
-  font-weight: 500;
-  color: white !important;
+  width: 100%; max-width: 600px; line-height: 1.5; font-size: 1.2rem;
+  margin-bottom: 1.5rem; font-weight: 500; color: white !important;
 }
-
-.read-more {
-  color: #b3b3b3;
-  cursor: pointer;
-  font-weight: bold;
-  margin-left: 8px;
-  text-decoration: underline;
-  font-size: 1rem;
-  transition: color 0.2s;
-}
+.read-more { color: #b3b3b3; cursor: pointer; font-weight: bold; margin-left: 8px; text-decoration: underline; font-size: 1rem; transition: color 0.2s; }
 .read-more:hover { color: #e50914; }
 
 .hero-buttons { display: flex; gap: 15px; margin-top: 20px; }
@@ -180,17 +160,7 @@ onUnmounted(() => { clearInterval(bannerInterval) })
 
 .hero-fade-top { position: absolute; top: 0; width: 100%; height: 150px; background-image: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, transparent 100%); z-index: 1; }
 .hero-fade-bottom { position: absolute; bottom: 0; width: 100%; height: 20vh; background-image: linear-gradient(180deg, transparent, rgba(0,0,0,0.9)); z-index: 1; }
-
-/* [수정 핵심] 메인 콘텐츠와 히어로 배너 겹침 제거 */
-.main-content {
-  position: relative;
-  z-index: 20;
-  /* 기존 margin-top: -10vh 를 0으로 변경하여 아래로 내림 */
-  margin-top: 0;
-  padding-bottom: 40px;
-  /* 라이트 모드 가시성을 위해 패딩 추가 */
-  padding-top: 20px;
-}
+.main-content { position: relative; z-index: 20; margin-top: 0; padding-bottom: 40px; padding-top: 20px; }
 .hero-skeleton { height: 85vh; width: 100%; background: #2f2f2f; }
 
 @media (max-width: 1024px) {
@@ -200,46 +170,35 @@ onUnmounted(() => { clearInterval(bannerInterval) })
 }
 
 @media (max-width: 768px) {
+  /* [수정] 모바일 화면 비율 조정 (이미지 교체 X) */
   .hero-wrapper, .hero-banner, .hero-skeleton {
-    height: 65vh;
-    min-height: 450px;
+    /* 모바일에서는 높이를 조금 줄여서 비율을 맞춤 */
+    height: 60vh;
+    min-height: 400px;
   }
+
   .hero-content {
-    width: 100%;
-    margin-left: 0;
+    width: 100%; margin-left: 0;
     padding: 0 20px;
-    padding-top: 80px;
-    align-items: flex-start;
+    padding-top: 80px; align-items: flex-start;
   }
-  .hero-title {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-  }
+
+  .hero-title { font-size: 2rem; margin-bottom: 0.5rem; }
   .hero-overview {
-    font-size: 1rem;
-    line-height: 1.4;
-    margin-bottom: 1rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    font-size: 1rem; line-height: 1.4; margin-bottom: 1rem;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
   }
+
+  /* 모바일 UI 정리 */
   .read-more { display: none; }
-  .hero-arrow { display: none; }
+  .hero-arrow { display: none; } /* 화살표 숨김 */
   .hero-buttons { margin-top: 15px; gap: 10px; }
-  .btn {
-    padding: 0.6rem 1.5rem;
-    font-size: 0.95rem;
-  }
-  /* 모바일에서도 겹치지 않도록 마진 제거 유지 */
+  .btn { padding: 0.6rem 1.5rem; font-size: 0.95rem; }
   .main-content { margin-top: 0; padding-top: 20px; }
 }
 
 @media (max-width: 480px) {
-  .hero-wrapper, .hero-banner {
-    height: 60vh;
-    min-height: 400px;
-  }
+  .hero-wrapper, .hero-banner { height: 55vh; min-height: 350px; }
   .hero-title { font-size: 1.7rem; }
 }
 </style>

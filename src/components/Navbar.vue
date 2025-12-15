@@ -128,7 +128,23 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
 
 <style scoped>
 /* 레이아웃 구조 */
-.navbar { display: flex; justify-content: space-between; align-items: center; padding: 0 4%; position: fixed; top: 0; width: 100%; z-index: 1000; height: 70px; box-sizing: border-box; transition: background-color 0.4s ease; background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); }
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4%; /* PC 기본 패딩 유지 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  /* [수정] 모바일 화면 잘림 방지를 위한 최대 너비 설정 */
+  max-width: 100vw;
+  z-index: 1000;
+  height: 70px;
+  box-sizing: border-box;
+  transition: background-color 0.4s ease;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+}
 .navbar.black-nav { background-color: #141414; }
 .navbar.hover-nav { background-color: rgba(0,0,0,0.9); }
 
@@ -201,7 +217,7 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
 .mobile-menu-content.light-mobile .mobile-links a.router-link-active { color: #333; }
 
 /* =======================================================
-   [반응형 핵심 수정] 모바일 검색창 레이아웃 & 로고 겹침 해결
+   [반응형 핵심 수정] 모바일 화면 잘림 방지 스타일 적용
    ======================================================= */
 @media (max-width: 768px) {
   /* PC 요소 숨기기 */
@@ -217,38 +233,35 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
   /* 모바일 프로필 메뉴 내 통합 기능 활성화 */
   .mobile-actions-menu { display: flex; }
 
-  .navbar { padding: 0 15px; }
+  /* [수정] 모바일 패딩 조정: 고정 px 대신 % 사용으로 잘림 방지 */
+  .navbar { padding: 0 4%; }
 
   /* [수정] 모바일 검색창: 활성화 시 하단에 전체 너비로 펼쳐짐 */
   .search-box.active {
-    /* 아이콘 주변 박스 스타일 제거 (아이콘만 보이게) */
     border: none !important;
     background: transparent !important;
     padding: 0 !important;
-    position: static; /* 부모인 .navbar 기준으로 absolute 배치 허용 */
+    position: static;
   }
 
   .search-box.active input {
     display: block;
     position: absolute;
-    top: 70px; /* 네비게이션 바 높이만큼 아래로 */
+    top: 70px;
     left: 0;
-    width: 100% !important; /* 전체 너비 */
-    height: 60px; /* 넉넉한 입력 공간 */
+    width: 100% !important;
+    height: 60px;
     padding: 0 20px;
     box-sizing: border-box;
     font-size: 1rem;
-
-    /* 다크모드 기본 디자인 */
     background: #141414;
     color: white;
     border-top: 1px solid #333;
     border-bottom: 1px solid #333;
-    z-index: 999; /* 다른 요소 위로 */
+    z-index: 999;
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
 
-  /* 모바일 검색창 라이트 모드 대응 */
   .search-box.active.light-theme-box input {
     background: #ffffff !important;
     color: #333333 !important;
