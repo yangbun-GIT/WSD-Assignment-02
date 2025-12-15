@@ -112,21 +112,20 @@ const isSignUpMode = ref(false)
 // 로그인 변수
 const loginEmail = ref('')
 const loginApiKey = ref('')
-const rememberMe = ref(false) // [추가]
+const rememberMe = ref(false)
 
 // 회원가입 변수
 const signupEmail = ref('')
 const signupApiKey = ref('')
 const signupApiKeyConfirm = ref('')
-const agreeTerms = ref(false) // [추가]
+const agreeTerms = ref(false)
 
-// [추가] 이메일 유효성 검사 정규식
+// 이메일 유효성 검사
 const isValidEmail = (email: string) => {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return re.test(email);
 }
 
-// [추가] 컴포넌트 로드 시 저장된 아이디 불러오기
 onMounted(() => {
   const savedId = localStorage.getItem('saved-email')
   if (savedId) {
@@ -146,7 +145,6 @@ const handleLogin = () => {
     return
   }
 
-  // 아이디 저장 로직
   if (rememberMe.value) {
     localStorage.setItem('saved-email', loginEmail.value)
   } else {
@@ -169,7 +167,6 @@ const handleSignUp = () => {
     return
   }
 
-  // [필수] 약관 동의 체크
   if (!agreeTerms.value) {
     alert('서비스 이용 약관에 동의해야 가입할 수 있습니다.')
     return
@@ -256,7 +253,6 @@ h1 { font-weight: 700; margin-bottom: 1.5rem; font-size: 2.2rem; }
   content: ''; flex: 1; height: 1px; background: #555; margin: 0 10px;
 }
 
-/* 입력창 스타일 */
 .input-group { position: relative; width: 100%; margin: 0.8rem 0; }
 
 .input-group input {
@@ -298,7 +294,6 @@ h1 { font-weight: 700; margin-bottom: 1.5rem; font-size: 2.2rem; }
   top: 0.4rem; left: 1rem; font-size: 0.7rem; font-weight: bold; transform: translateY(0); color: #ccc;
 }
 
-/* [NEW] 체크박스 및 옵션 행 스타일 */
 .options-row {
   display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: 10px;
 }
@@ -325,7 +320,6 @@ h1 { font-weight: 700; margin-bottom: 1.5rem; font-size: 2.2rem; }
 .mobile-text { display: none; margin-top: 20px; font-size: 0.9rem; color: #aaa; }
 .mobile-text span { color: #fff; font-weight: bold; cursor: pointer; margin-left: 5px; text-decoration: underline; }
 
-/* 오버레이 */
 .overlay-container {
   position: absolute; top: 0; left: 50%; width: 50%; height: 100%; overflow: hidden;
   transition: transform 0.6s ease-in-out; z-index: 100;
@@ -365,7 +359,6 @@ h1 { font-weight: 700; margin-bottom: 1.5rem; font-size: 2.2rem; }
 .overlay-right { right: 0; transform: translateX(40px); }
 .container.right-panel-active .overlay-right { transform: translateX(20%); }
 
-/* 모바일 반응형 */
 @media (max-width: 900px) {
   .logo-area { top: 1.5rem; left: 1.5rem; }
   .logo-img { height: 2.5rem; }
@@ -397,5 +390,25 @@ h1 { font-weight: 700; margin-bottom: 1.5rem; font-size: 2.2rem; }
   h1 { font-size: 1.8rem; margin-bottom: 1rem; }
   .input-group input { padding: 1.2rem 1rem 0.5rem; font-size: 0.9rem; }
   .action-btn { padding: 0.8rem 0; margin-top: 1rem; }
+
+  /* [수정] 모바일에서 텍스트 색상 강제 흰색 (라이트 모드 무시) */
+  form h1,
+  .form-container h1,
+  .form-container span,
+  .form-container p,
+  .form-container label,
+  .form-container a {
+    color: #ffffff !important;
+  }
+
+  .input-group input {
+    color: #ffffff !important;
+    background-color: #333 !important;
+  }
+
+  /* 라이트 모드일 때도 배경 어둡게 유지 */
+  :global(body.light-mode) .container {
+    background-color: rgba(0,0,0,0.85) !important;
+  }
 }
 </style>
