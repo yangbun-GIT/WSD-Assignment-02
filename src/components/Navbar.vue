@@ -126,22 +126,29 @@ onMounted(() => { window.addEventListener('scroll', handleScroll); window.addEve
 onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.removeEventListener('click', handleClickOutside) })
 </script>
 
+<style>
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden; /* 가로 스크롤 강제 숨김 */
+}
+</style>
+
 <style scoped>
 /* 레이아웃 구조 */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 4%; /* PC 기본 패딩 유지 */
+  padding: 0 4%; /* 업로드해주신 원본 패딩 유지 */
   position: fixed;
   top: 0;
-  left: 0;
+  left: 0; /* 위치 명시 */
   width: 100%;
-  /* [수정] 모바일 화면 잘림 방지를 위한 최대 너비 설정 */
-  max-width: 100vw;
   z-index: 1000;
   height: 70px;
-  box-sizing: border-box;
+  box-sizing: border-box; /* 패딩 포함 크기 계산 */
   transition: background-color 0.4s ease;
   background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
 }
@@ -217,7 +224,7 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
 .mobile-menu-content.light-mobile .mobile-links a.router-link-active { color: #333; }
 
 /* =======================================================
-   [반응형 핵심 수정] 모바일 화면 잘림 방지 스타일 적용
+   모바일 반응형 스타일
    ======================================================= */
 @media (max-width: 768px) {
   /* PC 요소 숨기기 */
@@ -233,10 +240,9 @@ onUnmounted(() => { window.removeEventListener('scroll', handleScroll); window.r
   /* 모바일 프로필 메뉴 내 통합 기능 활성화 */
   .mobile-actions-menu { display: flex; }
 
-  /* [수정] 모바일 패딩 조정: 고정 px 대신 % 사용으로 잘림 방지 */
-  .navbar { padding: 0 4%; }
+  .navbar { padding: 0 15px; } /* 모바일 패딩 약간 축소 */
 
-  /* [수정] 모바일 검색창: 활성화 시 하단에 전체 너비로 펼쳐짐 */
+  /* 모바일 검색창: 활성화 시 하단에 전체 너비로 펼쳐짐 */
   .search-box.active {
     border: none !important;
     background: transparent !important;
